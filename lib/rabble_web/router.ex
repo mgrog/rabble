@@ -17,12 +17,27 @@ defmodule RabbleWeb.Router do
   scope "/", RabbleWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    get "/", PageController, :authenticate
+  end
+
+  scope "/app", RabbleWeb do
+    pipe_through :browser
+
+    get "/*path", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", RabbleWeb do
-  #   pipe_through :api
+  scope "/api", RabbleWeb do
+    pipe_through :api
+
+    resources "/users", UserController
+    resources "/messages", MessageController
+    resources "/rooms", RoomController
+  end
+
+  # scope "/auth", RabbleWeb do
+  #   pipe_through :browser
+
   # end
 
   # Enables LiveDashboard only for development

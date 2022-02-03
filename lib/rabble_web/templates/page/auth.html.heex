@@ -1,0 +1,19 @@
+<div class="w-screen h-full">
+  <div class="w-[95%] sm:w-3/4 md:w-1/2 h-80 rounded-xl border border-slate-400 bg-slate-300 mx-auto mt-12 md:mt-30 p-4">
+  <%= form_tag @callback_url, method: "post", class: "h-full flex flex-col" do %>
+    <fieldset class="h-full flex flex-col">
+      <legend class="mb-4">Authentication Information</legend>
+
+      <label for="email">Email</label>
+      <input class="rounded" type="email" name="email" id="email" required value={ @conn.params["email"] } />
+
+      <label for="password">Password</label>
+      <input class="rounded" type="password" name="password" id="password" required />
+    </fieldset>
+    <div>
+      <button type="submit" class="rounded px-10 py-2 float-right text-white bg-blue-600 hover:bg-blue-700">Login</button>
+    </div>
+  <% end %>
+  <%=@callback_url %>
+  </div>
+</div>
