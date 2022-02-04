@@ -17,7 +17,7 @@ const Menu = () => {
       switch (event) {
         case 'phx_reply':
           console.log('channel connected', event, payload);
-          const rooms = payload.response?.chatrooms;
+          const rooms = payload.response?.user.rooms;
           return rooms && setLinks(rooms);
         case 'rooms:new':
           console.log('new', event, payload);
@@ -29,9 +29,9 @@ const Menu = () => {
     [setLinks],
   );
 
-  const { broadcast, loading, error } = useChannel('user_account:1', onChannel);
+  const { broadcast, loading, error } = useChannel('account', onChannel);
 
-  console.log(error);
+  console.log(loading, error);
 
   const addChat = (roomName: string, users: User[]) => {
     broadcast('create_new', { title: roomName, users });

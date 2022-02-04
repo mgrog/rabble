@@ -4,7 +4,7 @@ defmodule Rabble.Chats.Room do
 
   alias Rabble.Accounts.User
 
-  @derive {Jason.Encoder, only: [:title, :id]}
+  @derive {Jason.Encoder, only: [:id, :title, :messages]}
 
   schema "rooms" do
     field :title, :string

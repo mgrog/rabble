@@ -58,17 +58,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :ueberauth, Ueberauth,
-  providers: [
-    github: {Ueberauth.Strategy.Github, [default_scope: "user:email"]},
-    identity:
-      {Ueberauth.Strategy.Identity,
-       [
-         callback_methods: ["POST"],
-         uid_field: :username,
-         nickname_field: :username
-       ]}
-  ]
+config :rabble, :pow,
+  user: Rabble.Accounts.AuthUser,
+  repo: Rabble.Repo,
+  web_module: RabbleWeb
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

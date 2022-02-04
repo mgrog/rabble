@@ -7,7 +7,6 @@ defmodule Rabble.Chats do
   alias Rabble.Repo
 
   alias Rabble.Chats.Message
-  alias Rabble.Accounts.User
 
   @doc """
   Returns the list of messages.
@@ -51,8 +50,9 @@ defmodule Rabble.Chats do
 
   """
   def create_message(attrs \\ %{}) do
-    %Message{}
-    |> Message.changeset(attrs)
+    attrs["room"]
+    |> Ecto.build_assoc(:messages, user_id: attrs["user_id"])
+    |> Message.changeset(%{content: attrs["content"]})
     |> Repo.insert()
   end
 
@@ -135,7 +135,6 @@ defmodule Rabble.Chats do
   def get_room!(id) do
     Repo.get!(Room, id)
     |> Repo.preload(:messages)
-    |> Repo.preload(:participants)
   end
 
   @doc """
@@ -202,13 +201,5 @@ defmodule Rabble.Chats do
   """
   def change_room(%Room{} = room, attrs \\ %{}) do
     Room.changeset(room, attrs)
-  end
-
-  alias Rabble.Chats.Participant
-
-  def add_participant(%Participant{} = participant, attrs \\ %{}) do
-    participant
-    |> Participant.changeset(attrs)
-    |> Repo.insert()
   end
 end

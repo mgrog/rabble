@@ -33,7 +33,7 @@ defmodule RabbleWeb.UserControllerTest do
 
       assert %{
                "id" => ^id,
-               "name" => "some name"
+               "nickname" => "some name"
              } = json_response(conn, 200)["data"]
     end
 
@@ -54,7 +54,7 @@ defmodule RabbleWeb.UserControllerTest do
 
       assert %{
                "id" => ^id,
-               "name" => "some updated name"
+               "nickname" => "some updated name"
              } = json_response(conn, 200)["data"]
     end
 

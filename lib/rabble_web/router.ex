@@ -1,5 +1,6 @@
 defmodule RabbleWeb.Router do
   use RabbleWeb, :router
+  use Pow.Phoenix.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -12,23 +13,39 @@ defmodule RabbleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug RabbleWeb.APIAuthPlug, otp_app: :my_app
+  end
+
+  pipeline :protected do
+    plug Pow.Plug.RequireAuthenticated,
+      error_handler: Pow.Phoenix.PlugErrorHandler
+  end
+
+  pipeline :api_protected do
+    plug Pow.Plug.RequireAuthenticated, error_handler: RabbleWeb.APIAuthErrorHandler
+  end
+
+  scope "/" do
+    pipe_through :browser
+
+    pow_routes()
   end
 
   scope "/", RabbleWeb do
     pipe_through :browser
 
-    get "/", PageController, :authenticate
+    get "/", PageController, :reroute
   end
 
-  scope "/app", RabbleWeb do
-    pipe_through :browser
+  scope "/app", RabbleWeb, as: :app do
+    pipe_through [:browser, :protected]
 
     get "/*path", PageController, :index
   end
 
   # Other scopes may use custom stacks.
   scope "/api", RabbleWeb do
-    pipe_through :api
+    pipe_through [:api, :api_protected]
 
     resources "/users", UserController
     resources "/messages", MessageController

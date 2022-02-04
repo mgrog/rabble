@@ -1,4 +1,4 @@
-defmodule Rabble.Repo.Migrations.CreateUsers do
+defmodule Rabble.Repo.Migrations.CreateUsers1 do
   use Ecto.Migration
 
   def change do

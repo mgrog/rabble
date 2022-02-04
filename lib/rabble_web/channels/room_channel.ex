@@ -1,13 +1,13 @@
 defmodule RabbleWeb.RoomChannel do
   use RabbleWeb, :channel
-  alias Rabble.Chats
 
   @impl true
   def join("room:" <> room_id, payload, socket) do
     if authorized?(payload) do
-      %{messages: msgs} = Chats.get_room!(room_id)
+      id = String.to_integer(room_id)
+      room = Rabble.Chats.get_room!(id)
 
-      {:ok, %{messages: msgs}, socket}
+      {:ok, %{room: room}, socket}
     else
       {:error, %{reason: "unauthorized"}}
     end
@@ -16,11 +16,7 @@ defmodule RabbleWeb.RoomChannel do
   # Channels can be used in a request/response fashion
   # by sending replies to requests from the client
   @impl true
-  @spec handle_in(<<_::32, _::_*8>>, any, any) ::
-          {:noreply, Phoenix.Socket.t()} | {:reply, {:ok, any}, any}
   def handle_in("ping", payload, socket) do
-    IO.puts("++++")
-    IO.puts("ping")
     {:reply, {:ok, payload}, socket}
   end
 

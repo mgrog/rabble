@@ -13,8 +13,7 @@ const Chat = ({ children }: Props) => {
   const chatConnect = useCallback(
     (event, payload) => {
       console.log('channel connected', event, payload);
-      const msgs = payload.response?.messages || [];
-      setMessages(msgs);
+      setMessages([]);
     },
     [setMessages],
   );

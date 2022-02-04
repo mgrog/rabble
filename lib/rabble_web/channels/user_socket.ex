@@ -11,7 +11,7 @@ defmodule RabbleWeb.UserSocket do
   # pointing to the `RabbleWeb.RoomChannel`:
   #
   channel "room:*", RabbleWeb.RoomChannel
-  channel "user_account:*", RabbleWeb.AccountChannel
+  channel "account", RabbleWeb.AccountChannel
 
   #
   # To create a channel file, use the mix task:
@@ -33,8 +33,16 @@ defmodule RabbleWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   @impl true
-  def connect(_params, socket, _connect_info) do
-    {:ok, socket}
+  def connect(%{"token" => token}, socket, _connect_info) do
+    token = Phoenix.Token.verify(socket, "user_socket", token)
+
+    case token do
+      {:ok, user_id} ->
+        {:ok, assign(socket, :user_id, user_id)}
+
+      {:error, _error} ->
+        :error
+    end
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:

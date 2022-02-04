@@ -4,10 +4,13 @@ defmodule Rabble.Accounts.User do
 
   alias Rabble.Chats.Room
 
-  @derive {Jason.Encoder, only: [:name, :id]}
+  @derive {Jason.Encoder, only: [:nickname, :email, :id, :rooms]}
 
   schema "users" do
-    field :name, :string
+    field :nickname, :string
+    field :email, :string
+    field :token, :string
+    has_many :messages, Rabble.Chats.Message
 
     many_to_many(
       :rooms,
@@ -22,7 +25,7 @@ defmodule Rabble.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> cast(attrs, [:nickname])
+    |> validate_required([:nickname])
   end
 end

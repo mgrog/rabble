@@ -7,7 +7,7 @@ import RoutedComponents from './src/layouts/RoutedComponents';
 
 const app = document.getElementById('rabble-app');
 ReactDOM.render(
-  <SocketProvider wsUrl={'/socket'} options={{}}>
+  <SocketProvider wsUrl={'/socket'} options={{ token: window.userToken }}>
     <BrowserRouter basename="/app">
       <MainLayout>
         <RoutedComponents />

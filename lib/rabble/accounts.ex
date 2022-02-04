@@ -7,6 +7,7 @@ defmodule Rabble.Accounts do
   alias Rabble.Repo
 
   alias Rabble.Accounts.User
+  alias Rabble.Chats.Room
 
   @doc """
   Returns the list of users.
@@ -35,7 +36,18 @@ defmodule Rabble.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    usr =
+      Repo.get!(User, id)
+      |> Repo.preload(:rooms)
+
+    # dont need messages here
+    rooms =
+      usr.rooms
+      |> Enum.map(fn r -> %Room{r | messages: nil} end)
+
+    %User{usr | rooms: rooms}
+  end
 
   @doc """
   Creates a user.
@@ -100,5 +112,11 @@ defmodule Rabble.Accounts do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
+  end
+
+  alias Rabble.Accounts.AuthUser
+
+  def get_auth_user!(id) do
+    Repo.get(AuthUser, id)
   end
 end

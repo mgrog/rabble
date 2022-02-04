@@ -2,7 +2,7 @@ defmodule Rabble.Chats.Message do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:content, :user, :room, :inserted_at]}
+  @derive {Jason.Encoder, only: [:content]}
 
   schema "messages" do
     field :content, :string
