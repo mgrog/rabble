@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useChannel } from '../hooks/useChannel';
+import { styled } from '@stitches/react';
 
 type Props = {
   children?: ReactNode;
@@ -72,5 +73,11 @@ Chat.Message = ({ name, content, time }: MessageProps) => {
     </div>
   );
 };
+
+const StyledChat = styled('div', {
+  display: 'flex',
+  position: 'absolute',
+  border: 'solid 1px ',
+});
 
 export default Chat;
