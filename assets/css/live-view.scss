@@ -1,0 +1,36 @@
+.phx-live-view {
+  height: auto;
+  width: 80%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  input {
+    border-radius: 0.5rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .phx-live-view {
+    width: 90%;
+  }
+}
+
+@media (min-width: 768px) {
+  .phx-live-view {
+    width: 66%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .phx-live-view {
+    width: 50%;
+  }
+}

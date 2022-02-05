@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import { Button, Input } from 'semantic-ui-react';
 import { User } from '../shared/interfaces/user.interface';
-import { Input, Button } from './Elements';
 
 type Props = {
   position?: 'right';
@@ -19,13 +19,12 @@ const CreateRoom = ({ loading = false, position = 'right', onClose }: Props) => 
   const [roomName, setRoomName] = useState('');
 
   return (
-    <div
-      className={`border border-solid border-slate-400 bg-white p-4 rounded-lg absolute ${pos()}`}>
+    <div className={`${pos()}`}>
       <Input placeholder="Name the room..." value={roomName} handler={setRoomName} />
       <CreateRoom.UsersSelect />
       <Button
         className={'text-white'}
-        color={'bg-blue-500'}
+        color={'blue'}
         hoverColor={'hover:bg-blue-600'}
         onClick={() => onClose(roomName, [])}>
         Create

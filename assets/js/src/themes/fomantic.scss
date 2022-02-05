@@ -1,0 +1,9 @@
+$theme-folder: './' !default;
+$image-path: '#{$theme-folder}/assets/images' !default;
+$font-path: '#{$theme-folder}/assets/fonts' !default;
+
+// @import '../../node_modules/fomantic-ui-sass/src/themes/default/globals/fonts/all';
+
+@import 'theme.scss';
+@import '../../node_modules/fomantic-ui-sass/src/variables'; // default theme variables
+@import '../../node_modules/fomantic-ui-sass/src/semantic.scss';

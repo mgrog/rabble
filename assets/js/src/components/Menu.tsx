@@ -4,6 +4,7 @@ import { useChannel } from '../hooks/useChannel';
 import { Room } from '../shared/interfaces/room.interface';
 import { User } from '../shared/interfaces/user.interface';
 import CreateRoom from './CreateRoom';
+import { Button } from 'semantic-ui-react';
 
 const Menu = () => {
   const [links, setLinks] = useState<Room[]>([]);
@@ -45,7 +46,7 @@ const Menu = () => {
       removeChatroom={() => broadcast('delete', { id: x.id })}></Menu.Link>
   ));
   return (
-    <div className="bg-white h-full w-40 flex flex-col border-solid border-r border-slate-400">
+    <div>
       <Menu.Header />
       <Menu.Controls addChatroom={() => setCreatingRoom(true)}>
         {creatingRoom && <CreateRoom onClose={addChat} />}
@@ -62,10 +63,8 @@ Menu.Header = () => {
 Menu.Controls = ({ addChatroom, children }: { addChatroom: () => void; children: ReactNode }) => {
   return (
     <div className="flex items-center justify-between h-8 relative">
-      <span className="text-xs cursor-default uppercase px-2">Chatrooms</span>
-      <button className="text-xl px-2 mb-1" onClick={addChatroom}>
-        +
-      </button>
+      <span className="text-xs font-bold cursor-default uppercase px-2">Chatrooms</span>
+      <Button onClick={addChatroom}>+</Button>
       {children}
     </div>
   );
