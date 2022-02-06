@@ -5,6 +5,7 @@ defmodule Rabble.Chats do
 
   import Ecto.Query, warn: false
   alias Rabble.Repo
+  alias Ecto.Changeset
 
   alias Rabble.Chats.Message
 
@@ -134,7 +135,7 @@ defmodule Rabble.Chats do
   """
   def get_room!(id) do
     Repo.get!(Room, id)
-    |> Repo.preload(:messages)
+    |> Repo.preload([:messages, :participants])
   end
 
   @doc """
@@ -152,7 +153,8 @@ defmodule Rabble.Chats do
   def create_room(attrs \\ %{}) do
     %Room{}
     |> Room.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:users, attrs["users"])
+    |> Changeset.put_assoc(:users, attrs["users"])
+    |> Changeset.put_assoc(:participants, attrs["users"])
     |> Repo.insert()
   end
 
@@ -201,5 +203,101 @@ defmodule Rabble.Chats do
   """
   def change_room(%Room{} = room, attrs \\ %{}) do
     Room.changeset(room, attrs)
+  end
+
+  alias Rabble.Chats.Participant
+
+  @doc """
+  Returns the list of participants.
+
+  ## Examples
+
+      iex> list_participants()
+      [%Participant{}, ...]
+
+  """
+  def list_participants do
+    Repo.all(Participant)
+  end
+
+  @doc """
+  Gets a single participant.
+
+  Raises `Ecto.NoResultsError` if the Participant does not exist.
+
+  ## Examples
+
+      iex> get_participant!(123)
+      %Participant{}
+
+      iex> get_participant!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_participant!(id), do: Repo.get!(Participant, id)
+
+  @doc """
+  Creates a participant.
+
+  ## Examples
+
+      iex> create_participant(%{field: value})
+      {:ok, %Participant{}}
+
+      iex> create_participant(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_participant(attrs \\ %{}) do
+    %Participant{}
+    |> Participant.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a participant.
+
+  ## Examples
+
+      iex> update_participant(participant, %{field: new_value})
+      {:ok, %Participant{}}
+
+      iex> update_participant(participant, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_participant(%Participant{} = participant, attrs) do
+    participant
+    |> Participant.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a participant.
+
+  ## Examples
+
+      iex> delete_participant(participant)
+      {:ok, %Participant{}}
+
+      iex> delete_participant(participant)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_participant(%Participant{} = participant) do
+    Repo.delete(participant)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking participant changes.
+
+  ## Examples
+
+      iex> change_participant(participant)
+      %Ecto.Changeset{data: %Participant{}}
+
+  """
+  def change_participant(%Participant{} = participant, attrs \\ %{}) do
+    Participant.changeset(participant, attrs)
   end
 end

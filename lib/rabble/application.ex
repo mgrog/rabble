@@ -15,9 +15,10 @@ defmodule Rabble.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Rabble.PubSub},
       # Start the Endpoint (http/https)
-      RabbleWeb.Endpoint
+      RabbleWeb.Endpoint,
       # Start a worker by calling: Rabble.Worker.start_link(arg)
       # {Rabble.Worker, arg}
+      {Pow.Postgres.Store.AutoDeleteExpired, [interval: :timer.hours(12)]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

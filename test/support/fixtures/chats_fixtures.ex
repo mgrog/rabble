@@ -45,4 +45,18 @@ defmodule Rabble.ChatsFixtures do
 
     participant
   end
+
+  @doc """
+  Generate a participant.
+  """
+  def participant_fixture(attrs \\ %{}) do
+    {:ok, participant} =
+      attrs
+      |> Enum.into(%{
+        name: "some name"
+      })
+      |> Rabble.Chats.create_participant()
+
+    participant
+  end
 end

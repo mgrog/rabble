@@ -1,9 +1,10 @@
-$theme-folder: './' !default;
-$image-path: '#{$theme-folder}/assets/images' !default;
-$font-path: '#{$theme-folder}/assets/fonts' !default;
+$font-path: '../fonts' !default;
 
-// @import '../../node_modules/fomantic-ui-sass/src/themes/default/globals/fonts/all';
+/* Page */
 
-@import 'theme.scss';
+$page-background: #f1f5f9 !default;
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+@import './theme.scss';
 @import '../../node_modules/fomantic-ui-sass/src/variables'; // default theme variables
 @import '../../node_modules/fomantic-ui-sass/src/semantic.scss';

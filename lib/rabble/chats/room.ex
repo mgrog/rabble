@@ -3,20 +3,22 @@ defmodule Rabble.Chats.Room do
   import Ecto.Changeset
 
   alias Rabble.Accounts.User
+  alias Rabble.Chats.{Message, Participant}
 
-  @derive {Jason.Encoder, only: [:id, :title, :messages]}
+  @derive {Jason.Encoder, only: [:id, :title, :messages, :participants]}
 
   schema "rooms" do
     field :title, :string
-    has_many :messages, Rabble.Chats.Message
+    has_many :messages, Message
 
     many_to_many(
       :users,
       User,
-      join_through: "participants",
+      join_through: "roomusers",
       on_replace: :delete
     )
 
+    has_many :participants, Participant
     timestamps()
   end
 

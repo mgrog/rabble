@@ -6,12 +6,12 @@ defmodule RabbleWeb.ParticipantControllerTest do
   alias Rabble.Chats.Participant
 
   @create_attrs %{
-
+    name: "some name"
   }
   @update_attrs %{
-
+    name: "some updated name"
   }
-  @invalid_attrs %{}
+  @invalid_attrs %{name: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -32,7 +32,8 @@ defmodule RabbleWeb.ParticipantControllerTest do
       conn = get(conn, Routes.participant_path(conn, :show, id))
 
       assert %{
-               "id" => ^id
+               "id" => ^id,
+               "name" => "some name"
              } = json_response(conn, 200)["data"]
     end
 
@@ -52,7 +53,8 @@ defmodule RabbleWeb.ParticipantControllerTest do
       conn = get(conn, Routes.participant_path(conn, :show, id))
 
       assert %{
-               "id" => ^id
+               "id" => ^id,
+               "name" => "some updated name"
              } = json_response(conn, 200)["data"]
     end
 

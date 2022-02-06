@@ -39,13 +39,14 @@ defmodule Rabble.Accounts do
   def get_user!(id) do
     usr =
       Repo.get!(User, id)
-      |> Repo.preload(:rooms)
+      |> Repo.preload(rooms: [:participants])
 
     # dont need messages here
     rooms =
       usr.rooms
       |> Enum.map(fn r -> %Room{r | messages: nil} end)
 
+    IO.inspect(%User{usr | rooms: rooms})
     %User{usr | rooms: rooms}
   end
 
@@ -112,11 +113,5 @@ defmodule Rabble.Accounts do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
-  end
-
-  alias Rabble.Accounts.AuthUser
-
-  def get_auth_user!(id) do
-    Repo.get(AuthUser, id)
   end
 end

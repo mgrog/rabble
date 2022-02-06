@@ -162,4 +162,58 @@ defmodule Rabble.ChatsTest do
       assert %Ecto.Changeset{} = Chats.change_participant(participant)
     end
   end
+
+  describe "participants" do
+    alias Rabble.Chats.Participant
+
+    import Rabble.ChatsFixtures
+
+    @invalid_attrs %{name: nil}
+
+    test "list_participants/0 returns all participants" do
+      participant = participant_fixture()
+      assert Chats.list_participants() == [participant]
+    end
+
+    test "get_participant!/1 returns the participant with given id" do
+      participant = participant_fixture()
+      assert Chats.get_participant!(participant.id) == participant
+    end
+
+    test "create_participant/1 with valid data creates a participant" do
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Participant{} = participant} = Chats.create_participant(valid_attrs)
+      assert participant.name == "some name"
+    end
+
+    test "create_participant/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Chats.create_participant(@invalid_attrs)
+    end
+
+    test "update_participant/2 with valid data updates the participant" do
+      participant = participant_fixture()
+      update_attrs = %{name: "some updated name"}
+
+      assert {:ok, %Participant{} = participant} = Chats.update_participant(participant, update_attrs)
+      assert participant.name == "some updated name"
+    end
+
+    test "update_participant/2 with invalid data returns error changeset" do
+      participant = participant_fixture()
+      assert {:error, %Ecto.Changeset{}} = Chats.update_participant(participant, @invalid_attrs)
+      assert participant == Chats.get_participant!(participant.id)
+    end
+
+    test "delete_participant/1 deletes the participant" do
+      participant = participant_fixture()
+      assert {:ok, %Participant{}} = Chats.delete_participant(participant)
+      assert_raise Ecto.NoResultsError, fn -> Chats.get_participant!(participant.id) end
+    end
+
+    test "change_participant/1 returns a participant changeset" do
+      participant = participant_fixture()
+      assert %Ecto.Changeset{} = Chats.change_participant(participant)
+    end
+  end
 end

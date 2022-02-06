@@ -51,5 +51,6 @@ defmodule RabbleWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug Pow.Plug.Session, otp_app: :rabble
+  plug PowPersistentSession.Plug.Cookie
   plug RabbleWeb.Router
 end
