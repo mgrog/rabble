@@ -32,3 +32,5 @@ rabble-*.tar
 npm-debug.log
 /**/node_modules/
 
+/.elixir_ls/
+

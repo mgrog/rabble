@@ -2,8 +2,8 @@ import { Socket } from 'phoenix';
 import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
 import SocketContext from '../contexts/SocketContext';
 
-type MessageCB = (event: any, payload: any) => void;
-const defaultCB = (_e: any, _pl: any) => undefined;
+type MessageCB = (event: string, payload: any) => void;
+const defaultCB = (_e: string, _pl: any) => undefined;
 
 const useChannel = (channelTopic: string, onMessage: MessageCB = defaultCB) => {
   const socket = useContext(SocketContext);

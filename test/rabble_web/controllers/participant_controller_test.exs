@@ -33,7 +33,7 @@ defmodule RabbleWeb.ParticipantControllerTest do
 
       assert %{
                "id" => ^id,
-               "name" => "some name"
+               "nickname" => "some name"
              } = json_response(conn, 200)["data"]
     end
 
@@ -46,20 +46,27 @@ defmodule RabbleWeb.ParticipantControllerTest do
   describe "update participant" do
     setup [:create_participant]
 
-    test "renders participant when data is valid", %{conn: conn, participant: %Participant{id: id} = participant} do
-      conn = put(conn, Routes.participant_path(conn, :update, participant), participant: @update_attrs)
+    test "renders participant when data is valid", %{
+      conn: conn,
+      participant: %Participant{id: id} = participant
+    } do
+      conn =
+        put(conn, Routes.participant_path(conn, :update, participant), participant: @update_attrs)
+
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(conn, Routes.participant_path(conn, :show, id))
 
       assert %{
                "id" => ^id,
-               "name" => "some updated name"
+               "nickname" => "some updated name"
              } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn, participant: participant} do
-      conn = put(conn, Routes.participant_path(conn, :update, participant), participant: @invalid_attrs)
+      conn =
+        put(conn, Routes.participant_path(conn, :update, participant), participant: @invalid_attrs)
+
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

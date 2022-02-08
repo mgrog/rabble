@@ -47,9 +47,11 @@ defmodule RabbleWeb.Router do
   scope "/api", RabbleWeb do
     pipe_through [:api, :api_protected]
 
+    get "/me", UserController, :current
     resources "/users", UserController
     resources "/messages", MessageController
     resources "/rooms", RoomController
+    resources "/participants", ParticipantController
   end
 
   # scope "/auth", RabbleWeb do

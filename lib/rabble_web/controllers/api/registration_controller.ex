@@ -4,13 +4,16 @@ defmodule RabbleWeb.API.RegistrationController do
   alias Ecto.Changeset
   alias Plug.Conn
   alias RabbleWeb.ErrorHelpers
+  alias Rabble.Accounts
 
   @spec create(Conn.t(), map()) :: Conn.t()
   def create(conn, %{"user" => user_params}) do
     conn
     |> Pow.Plug.create_user(user_params)
     |> case do
-      {:ok, _user, conn} ->
+      {:ok, user, conn} ->
+        Accounts.assoc_participant(user)
+
         json(conn, %{
           data: %{
             access_token: conn.private[:api_access_token],

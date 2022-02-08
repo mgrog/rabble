@@ -7,6 +7,7 @@ defmodule Rabble.Accounts do
   alias Rabble.Repo
 
   alias Rabble.Accounts.User
+  alias Rabble.Chats
   alias Rabble.Chats.Room
 
   @doc """
@@ -39,14 +40,14 @@ defmodule Rabble.Accounts do
   def get_user!(id) do
     usr =
       Repo.get!(User, id)
+      |> Repo.preload(:participant)
       |> Repo.preload(rooms: [:participants])
 
     # dont need messages here
     rooms =
       usr.rooms
-      |> Enum.map(fn r -> %Room{r | messages: nil} end)
+      |> Enum.map(fn r -> %Room{r | messages: []} end)
 
-    IO.inspect(%User{usr | rooms: rooms})
     %User{usr | rooms: rooms}
   end
 
@@ -63,9 +64,30 @@ defmodule Rabble.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
+    IO.puts("+++++++")
+
+    changeset =
+      %User{}
+      |> User.changeset(attrs)
+
+    {status, resp} = Repo.insert(changeset)
+
+    {nextStatus, nextResp} =
+      case {status, resp} do
+        {:ok, user} ->
+          Chats.create_participant(user)
+
+        {:error, resp} ->
+          {:error, resp}
+      end
+
+    case {nextStatus, resp, nextResp} do
+      {:ok, resp, _} ->
+        {:ok, resp}
+
+      {:error, _, nextResp} ->
+        {:error, nextResp}
+    end
   end
 
   @doc """
@@ -84,6 +106,17 @@ defmodule Rabble.Accounts do
     user
     |> User.changeset(attrs)
     |> Repo.update()
+  end
+
+  def assoc_participant(%User{} = user) do
+    Map.from_struct(user)
+    |> Chats.upsert_participant(%{nickname: user.nickname})
+
+    user
+    |> Repo.preload(:participant)
+    |> User.changeset(%{})
+    |> Ecto.Changeset.put_assoc(:participant, %{nickname: user.nickname, user_id: user.id})
+    |> Repo.insert(on_conflict: :nothing)
   end
 
   @doc """

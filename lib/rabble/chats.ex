@@ -51,9 +51,12 @@ defmodule Rabble.Chats do
 
   """
   def create_message(attrs \\ %{}) do
-    attrs["room"]
-    |> Ecto.build_assoc(:messages, user_id: attrs["user_id"])
-    |> Message.changeset(%{content: attrs["content"]})
+    %{"content" => content, "room" => room, "user_id" => user_id} = attrs
+    IO.inspect(room)
+
+    room
+    |> Ecto.build_assoc(:messages, user_id: user_id)
+    |> Message.changeset(%{content: content})
     |> Repo.insert()
   end
 
@@ -105,6 +108,7 @@ defmodule Rabble.Chats do
   end
 
   alias Rabble.Chats.Room
+  alias Rabble.Accounts.User
 
   @doc """
   Returns the list of rooms.
@@ -154,8 +158,32 @@ defmodule Rabble.Chats do
     %Room{}
     |> Room.changeset(attrs)
     |> Changeset.put_assoc(:users, attrs["users"])
-    |> Changeset.put_assoc(:participants, attrs["users"])
     |> Repo.insert()
+  end
+
+  def create_room(attrs, []) do
+    create_room(attrs)
+  end
+
+  def create_room(attrs, participants) when is_list(participants) do
+    user_ids =
+      for x <- participants do
+        x["user_id"]
+      end
+
+    users = Repo.all(from u in User, where: u.id in ^user_ids)
+
+    %Room{}
+    |> Room.changeset(attrs)
+    |> Changeset.put_assoc(:users, users)
+    |> Repo.insert()
+    |> case do
+      {:ok, room} ->
+        {:ok, Repo.preload(room, [:messages, :participants])}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """
@@ -192,6 +220,12 @@ defmodule Rabble.Chats do
     Repo.delete(room)
   end
 
+  def delete_room(%{delete_id: id}) do
+    Repo.get!(Room, id)
+    |> Repo.preload([:messages, :users, :participants])
+    |> Repo.delete()
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking room changes.
 
@@ -206,6 +240,7 @@ defmodule Rabble.Chats do
   end
 
   alias Rabble.Chats.Participant
+  alias Rabble.Accounts.User
 
   @doc """
   Returns the list of participants.
@@ -248,9 +283,38 @@ defmodule Rabble.Chats do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_participant(attrs \\ %{}) do
-    %Participant{}
+  def create_participant(user, attrs \\ %{}) do
+    struct(User, user)
+    |> Ecto.build_assoc(:participants)
     |> Participant.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Upserts a participant.
+
+  ## Examples
+
+      iex> upsert_participant(%{field: value})
+      {:ok, %Participant{}}
+
+      iex> upsert_participant(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def upsert_participant(user, attrs \\ %{}) do
+    struct(User, user)
+    |> Ecto.build_assoc(:participant)
+    |> Participant.changeset(attrs)
+    |> Repo.insert(on_conflict: :nothing)
+  end
+
+  def assoc_all_participants(_room, []), do: IO.puts("No operation")
+
+  def assoc_room_participants(room, participants) do
+    struct(Room, room)
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_assoc(:participants, participants)
     |> Repo.insert()
   end
 

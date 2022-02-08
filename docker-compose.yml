@@ -7,4 +7,4 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: rabble_dev
+      POSTGRES_DB: rabble_${ENV:-dev}

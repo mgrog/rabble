@@ -13,7 +13,8 @@ defmodule RabbleWeb.ParticipantView do
   def render("participant.json", %{participant: participant}) do
     %{
       id: participant.id,
-      name: participant.name
+      user_id: participant.user_id,
+      nickname: participant.nickname
     }
   end
 end

@@ -11,10 +11,14 @@ defmodule Rabble.ChatsFixtures do
     {:ok, message} =
       attrs
       |> Enum.into(%{
-        content: "some content"
+        content: "some content",
+        user_id: 1,
+        room_id: 1
       })
       |> Rabble.Chats.create_message()
 
+    IO.puts("test")
+    IO.inspect(message)
     message
   end
 
@@ -30,20 +34,6 @@ defmodule Rabble.ChatsFixtures do
       |> Rabble.Chats.create_room()
 
     room
-  end
-
-  @doc """
-  Generate a participant.
-  """
-  def participant_fixture(attrs \\ %{}) do
-    {:ok, participant} =
-      attrs
-      |> Enum.into(%{
-
-      })
-      |> Rabble.Chats.create_participant()
-
-    participant
   end
 
   @doc """

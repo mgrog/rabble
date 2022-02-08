@@ -13,7 +13,8 @@ defmodule RabbleWeb.UserView do
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
-      name: user.nickname
+      nickname: user.nickname,
+      email: user.email
     }
   end
 end

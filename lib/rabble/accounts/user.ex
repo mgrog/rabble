@@ -6,14 +6,14 @@ defmodule Rabble.Accounts.User do
 
   alias Rabble.Chats.{Room, Message, Participant}
 
-  @derive {Jason.Encoder, only: [:nickname, :email, :id, :rooms]}
+  @derive {Jason.Encoder, only: [:nickname, :email, :id, :rooms, :participant]}
 
   schema "users" do
     field :nickname, :string
     field :email, :string
     field :token, :string
     has_many :messages, Message
-    has_one :participant, Participant
+    has_one :participant, Participant, on_replace: :update
 
     many_to_many(
       :rooms,

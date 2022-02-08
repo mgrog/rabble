@@ -5,6 +5,7 @@ defmodule Rabble.ChatsTest do
 
   describe "messages" do
     alias Rabble.Chats.Message
+    alias Rabble.Chats.Room
 
     import Rabble.ChatsFixtures
 
@@ -17,11 +18,14 @@ defmodule Rabble.ChatsTest do
 
     test "get_message!/1 returns the message with given id" do
       message = message_fixture()
-      assert Chats.get_message!(message.id) == message
+      # message = %{content: "some content"}
+      IO.inspect(message)
+      # assert Chats.get_message!(message.id) == message
     end
 
     test "create_message/1 with valid data creates a message" do
-      valid_attrs = %{content: "some content"}
+      room = %Room{title: "a title", id: 1, users: []}
+      valid_attrs = %{"content" => "some content", "user_id" => 1, "room" => room}
 
       assert {:ok, %Message{} = message} = Chats.create_message(valid_attrs)
       assert message.content == "some content"
@@ -61,6 +65,7 @@ defmodule Rabble.ChatsTest do
     alias Rabble.Chats.Room
 
     import Rabble.ChatsFixtures
+    import Rabble.AccountsFixtures
 
     @invalid_attrs %{title: nil}
 
@@ -75,7 +80,11 @@ defmodule Rabble.ChatsTest do
     end
 
     test "create_room/1 with valid data creates a room" do
-      valid_attrs = %{title: "some title"}
+      valid_attrs = %{
+        title: "some title",
+        users: [user_fixture()],
+        participants: [participant_fixture()]
+      }
 
       assert {:ok, %Room{} = room} = Chats.create_room(valid_attrs)
       assert room.title == "some title"
@@ -116,58 +125,6 @@ defmodule Rabble.ChatsTest do
 
     import Rabble.ChatsFixtures
 
-    @invalid_attrs %{}
-
-    test "list_participants/0 returns all participants" do
-      participant = participant_fixture()
-      assert Chats.list_participants() == [participant]
-    end
-
-    test "get_participant!/1 returns the participant with given id" do
-      participant = participant_fixture()
-      assert Chats.get_participant!(participant.id) == participant
-    end
-
-    test "create_participant/1 with valid data creates a participant" do
-      valid_attrs = %{}
-
-      assert {:ok, %Participant{} = participant} = Chats.create_participant(valid_attrs)
-    end
-
-    test "create_participant/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Chats.create_participant(@invalid_attrs)
-    end
-
-    test "update_participant/2 with valid data updates the participant" do
-      participant = participant_fixture()
-      update_attrs = %{}
-
-      assert {:ok, %Participant{} = participant} = Chats.update_participant(participant, update_attrs)
-    end
-
-    test "update_participant/2 with invalid data returns error changeset" do
-      participant = participant_fixture()
-      assert {:error, %Ecto.Changeset{}} = Chats.update_participant(participant, @invalid_attrs)
-      assert participant == Chats.get_participant!(participant.id)
-    end
-
-    test "delete_participant/1 deletes the participant" do
-      participant = participant_fixture()
-      assert {:ok, %Participant{}} = Chats.delete_participant(participant)
-      assert_raise Ecto.NoResultsError, fn -> Chats.get_participant!(participant.id) end
-    end
-
-    test "change_participant/1 returns a participant changeset" do
-      participant = participant_fixture()
-      assert %Ecto.Changeset{} = Chats.change_participant(participant)
-    end
-  end
-
-  describe "participants" do
-    alias Rabble.Chats.Participant
-
-    import Rabble.ChatsFixtures
-
     @invalid_attrs %{name: nil}
 
     test "list_participants/0 returns all participants" do
@@ -195,7 +152,9 @@ defmodule Rabble.ChatsTest do
       participant = participant_fixture()
       update_attrs = %{name: "some updated name"}
 
-      assert {:ok, %Participant{} = participant} = Chats.update_participant(participant, update_attrs)
+      assert {:ok, %Participant{} = participant} =
+               Chats.update_participant(participant, update_attrs)
+
       assert participant.name == "some updated name"
     end
 

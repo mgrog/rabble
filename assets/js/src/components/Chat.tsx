@@ -1,20 +1,33 @@
-import React, { ReactNode, useCallback, useState } from 'react';
+import React, {
+  KeyboardEvent,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 import { useParams } from 'react-router-dom';
 import { useChannel } from '../hooks/useChannel';
 import { styled } from '../../stitches.config';
-import { Image } from 'semantic-ui-react';
-import { ChatMessage } from '../shared/interfaces/chat-message.interface';
 import Feed from './Feed';
+import { Message } from '../shared/interfaces/structs.interfaces';
 
 const Chat = () => {
   const params = useParams();
   const [currentMessage, setCurrentMessage] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [title, setTitle] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const chatConnect = useCallback(
     (event, payload) => {
-      console.log('channel connected', event, payload);
-      setMessages([]);
+      switch (event) {
+        case 'phx_reply':
+          console.log('channel connected', event, payload);
+          const { room } = payload.response;
+          setTitle(room.title);
+          return setMessages(room?.messages || []);
+      }
     },
     [setMessages],
   );
@@ -23,16 +36,16 @@ const Chat = () => {
     useChannel(`room:${params.roomId}`, chatConnect);
   }
 
-  const addMessage = (text: string) => {
+  const addMessage = ({ content, user_id, updated_at }: Message) => {
     return setMessages((prevState) => [
       ...prevState,
-      { name: 'Miguel', content: text, date: 'now' },
+      { name: 'Miguel', content, updated_at: 'now' },
     ]);
   };
 
   return (
     <>
-      <Chat.Title>Room {params.roomId}</Chat.Title>
+      <Chat.Title>{title || 'loading...'}</Chat.Title>
       <Chat.Box>
         <Feed messages={messages}></Feed>
       </Chat.Box>
@@ -51,19 +64,53 @@ Chat.Title = ({ children }: { children: ReactNode }) => (
   </StyledTitle>
 );
 
-type MessageProps = {
-  name: string;
-  date: string;
-  content: string;
-  children: ReactNode;
+type InputProps = {
+  value: string;
+  setValue: Dispatch<SetStateAction<string>>;
+  addMessage: (text: string) => void;
 };
 
-Chat.Input = ({ value, setValue, addMessage }: any) => (
-  <StyledInput
-    onChange={(e) => setValue(e.target.value)}
-    onKeyDown={(e) => (e.key === 'Enter' ? addMessage(value) : null)}
-  />
-);
+Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
+  const inputEl = useRef<HTMLTextAreaElement>(null);
+  const [height, setHeight] = useState(0);
+  const MAX_HEIGHT = 300;
+  const LINE_HEIGHT = (x: number) => (x === 2 ? 40 : 28);
+  const MIN_HEIGHT = 55;
+  const CHAR_WIDTH = 11.7;
+
+  const updateTextBox = (text: string) => {
+    const lineWidth = text.length * CHAR_WIDTH;
+    const numLines = Math.ceil(lineWidth / inputEl?.current?.clientWidth);
+    const heightValue = numLines * LINE_HEIGHT(numLines);
+
+    setHeight(Math.min(heightValue, MAX_HEIGHT));
+    setValue(text);
+  };
+
+  const enterMessage = (text: string) => {
+    setValue('');
+    text.length && addMessage(text);
+    setHeight(50);
+  };
+
+  const handleInput = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    switch (event.key) {
+      case 'Enter':
+        event.preventDefault();
+        return enterMessage(value);
+    }
+  };
+
+  return (
+    <StyledInput
+      ref={inputEl}
+      style={{ height: `${Math.max(height, MIN_HEIGHT)}px` }}
+      value={value}
+      onChange={(e) => updateTextBox(e.target.value)}
+      onKeyDown={(e) => handleInput(e)}
+    />
+  );
+};
 
 // styles
 
@@ -97,6 +144,11 @@ const StyledInput = styled('textarea', {
   width: '90%',
   fontSize: '1.4em',
   outlineOffset: '0',
+  resize: 'none',
+
+  '&:focus': {
+    outline: 'solid $blue-800',
+  },
 });
 
 export default Chat;

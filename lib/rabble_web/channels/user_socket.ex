@@ -10,8 +10,8 @@ defmodule RabbleWeb.UserSocket do
   # Uncomment the following line to define a "room:*" topic
   # pointing to the `RabbleWeb.RoomChannel`:
   #
+  channel "global:*", RabbleWeb.GlobalChannel
   channel "room:*", RabbleWeb.RoomChannel
-  channel "account", RabbleWeb.AccountChannel
 
   #
   # To create a channel file, use the mix task:

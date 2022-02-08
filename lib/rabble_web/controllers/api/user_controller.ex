@@ -6,6 +6,11 @@ defmodule RabbleWeb.UserController do
 
   action_fallback RabbleWeb.FallbackController
 
+  def current(conn, _params) do
+    user = conn.assigns.current_user
+    render(conn, "show.json", user: user)
+  end
+
   def index(conn, _params) do
     users = Accounts.list_users()
     render(conn, "index.json", users: users)

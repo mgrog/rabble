@@ -18,7 +18,8 @@ defmodule Rabble.Chats.Room do
       on_replace: :delete
     )
 
-    has_many :participants, Participant
+    has_many :participants, through: [:users, :participant]
+
     timestamps()
   end
 

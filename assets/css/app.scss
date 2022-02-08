@@ -1,2 +1,17 @@
 @import '../js/src/themes/fomantic.scss';
 @import 'live-view.scss';
+
+.link {
+  color: #3b82f6;
+
+  &:hover {
+    color: #1d4ed8;
+  }
+}
+
+.danger {
+  color: #ef4444;
+  &:hover {
+    color: #b91c1c;
+  }
+}

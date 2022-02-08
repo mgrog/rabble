@@ -1,5 +1,5 @@
 import { styled } from '../../stitches.config';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useContext, useEffect } from 'react';
 import { Container } from 'semantic-ui-react';
 import SideMenu from '../components/SideMenu';
 
@@ -10,7 +10,7 @@ function MainLayout({ children }: { children: ReactNode }) {
         <StyledSideContainer>
           <SideMenu />
         </StyledSideContainer>
-        <Container>
+        <Container fluid>
           <StyledDynamicContent>{children}</StyledDynamicContent>
         </Container>
       </StyledLayout>
@@ -34,6 +34,7 @@ const StyledSideContainer = styled('div', {
   position: 'sticky',
   top: '14px',
   height: '100vh',
+  zIndex: 500,
 });
 
 const StyledDynamicContent = styled('div', {

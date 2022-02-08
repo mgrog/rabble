@@ -5,10 +5,10 @@ defmodule Rabble.Chats.Participant do
   alias Rabble.Chats.Room
   alias Rabble.Accounts.User
 
-  @derive {Jason.Encoder, only: [:name]}
+  @derive {Jason.Encoder, only: [:nickname, :user_id, :id]}
 
   schema "participants" do
-    field :name, :string
+    field :nickname, :string
     belongs_to :room, Room
     belongs_to :user, User
 
@@ -18,7 +18,8 @@ defmodule Rabble.Chats.Participant do
   @doc false
   def changeset(participant, attrs) do
     participant
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> cast(attrs, [:nickname])
+    |> unique_constraint(:user_id)
+    |> validate_required([:nickname])
   end
 end
