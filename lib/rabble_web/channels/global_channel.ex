@@ -31,9 +31,6 @@ defmodule RabbleWeb.GlobalChannel do
 
       {:error, changeset} ->
         {:reply, {:error, %{errors: changeset}}, socket}
-
-      _ ->
-        {:reply, {:error, %{errors: "unknown error"}}, socket}
     end
   end
 
@@ -61,14 +58,11 @@ defmodule RabbleWeb.GlobalChannel do
   Phoenix.Channel.intercept(["joined_room", "left_room"])
 
   @impl true
-  def handle_out(topic, msg, socket) do
-    IO.puts("++++")
-    IO.inspect(msg.id)
-
-    if msg.id != socket.assigns[:user_id] do
+  def handle_out(topic, attrs, socket) do
+    if attrs.id != socket.assigns[:user_id] do
       {:noreply, socket}
     else
-      push(socket, topic, msg)
+      push(socket, topic, attrs)
       {:noreply, socket}
     end
 

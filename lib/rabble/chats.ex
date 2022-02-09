@@ -36,7 +36,10 @@ defmodule Rabble.Chats do
       ** (Ecto.NoResultsError)
 
   """
-  def get_message!(id), do: Repo.get!(Message, id)
+  def get_message!(id) do
+    Repo.get!(Message, id)
+    |> Repo.preload(:participant)
+  end
 
   @doc """
   Creates a message.
@@ -51,11 +54,11 @@ defmodule Rabble.Chats do
 
   """
   def create_message(attrs \\ %{}) do
-    %{"content" => content, "room" => room, "user_id" => user_id} = attrs
-    IO.inspect(room)
+    %{"content" => content, "room" => room, "participant_id" => participant_id} = attrs
 
     room
-    |> Ecto.build_assoc(:messages, user_id: user_id)
+    |> Ecto.build_assoc(:messages, participant_id: participant_id)
+    |> Repo.preload(:participant)
     |> Message.changeset(%{content: content})
     |> Repo.insert()
   end
@@ -139,7 +142,7 @@ defmodule Rabble.Chats do
   """
   def get_room!(id) do
     Repo.get!(Room, id)
-    |> Repo.preload([:messages, :participants])
+    |> Repo.preload([:participants, messages: :participant])
   end
 
   @doc """

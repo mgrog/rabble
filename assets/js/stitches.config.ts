@@ -245,6 +245,12 @@ export const { styled, css, globalCss, keyframes, getCssText, theme, createTheme
         'rose-700': '#BE123C',
         'rose-800': '#9F1239',
         'rose-900': '#881337',
+
+        'semantic-border': 'solid 1px rgba(34, 36, 38, 0.15)',
+      },
+
+      radii: {
+        'semantic-border-radius': '0.2857142857rem',
       },
 
       shadows: {
@@ -266,6 +272,7 @@ export const { styled, css, globalCss, keyframes, getCssText, theme, createTheme
           'drop-shadow(0 20px 13px rgb(0 0 0 / 0.03)) drop-shadow(0 8px 5px rgb(0 0 0 / 0.08))',
         'drop-shadow-2xl': 'drop-shadow(0 25px 25px rgb(0 0 0 / 0.15))',
         'drop-shadow-none': 'drop-shadow(0 0 #0000)',
+        'semantic-shadow': '0 1px 2px 0 rgb(34 36 38 / 15%)',
       },
     },
     media: {

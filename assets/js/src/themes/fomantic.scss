@@ -6,5 +6,5 @@ $page-background: #f1f5f9 !default;
 
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 @import './theme.scss';
-@import '../../node_modules/fomantic-ui-sass/src/variables'; // default theme variables
+@import '../../node_modules/fomantic-ui-sass/src/_variables.scss'; // default theme variables
 @import '../../node_modules/fomantic-ui-sass/src/semantic.scss';

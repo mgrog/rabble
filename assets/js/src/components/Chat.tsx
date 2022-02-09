@@ -6,48 +6,61 @@ import React, {
   useCallback,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 import { useParams } from 'react-router-dom';
 import { useChannel } from '../hooks/useChannel';
 import { styled } from '../../stitches.config';
 import Feed from './Feed';
-import { Message } from '../shared/interfaces/structs.interfaces';
+import { Participant, Room } from '../shared/interfaces/structs.interfaces';
+import { Header } from 'semantic-ui-react';
 
 const Chat = () => {
   const params = useParams();
   const [currentMessage, setCurrentMessage] = useState('');
   const [title, setTitle] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<{ name: string; content: string; date: string }[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   const chatConnect = useCallback(
     (event, payload) => {
       switch (event) {
         case 'phx_reply':
           console.log('channel connected', event, payload);
-          const { room } = payload.response;
+          let { room }: { room: Room } = payload.response;
           setTitle(room.title);
-          return setMessages(room?.messages || []);
+          let msgs = room.messages.map((m) => ({
+            name: m.participant.nickname,
+            content: m.content,
+            date: m.updated_at,
+          }));
+          setMessages(msgs);
+          setParticipants(room.participants);
+          return;
+        case 'message_added':
+          console.log('msg', event, payload);
+          setMessages((prevState) => [...prevState, { ...payload }]);
       }
     },
     [setMessages],
   );
 
-  if (params.roomId !== undefined) {
-    useChannel(`room:${params.roomId}`, chatConnect);
-  }
+  const channel = useChannel(`room:${params.roomId}`, chatConnect);
 
-  const addMessage = ({ content, user_id, updated_at }: Message) => {
-    return setMessages((prevState) => [
-      ...prevState,
-      { name: 'Miguel', content, updated_at: 'now' },
-    ]);
+  const addMessage = (content: string) => {
+    channel.broadcast('message', { content });
   };
 
   return (
     <>
-      <Chat.Title>{title || 'loading...'}</Chat.Title>
+      <Chat.Title>
+        <Header as={'h2'}>
+          {title || 'loading...'}
+          <Header.Subheader>{participants.length} members</Header.Subheader>
+        </Header>
+      </Chat.Title>
       <Chat.Box>
-        <Feed messages={messages}></Feed>
+        <Feed feedMessages={messages}></Feed>
       </Chat.Box>
       <Chat.Input value={currentMessage} setValue={setCurrentMessage} addMessage={addMessage} />
     </>
@@ -58,11 +71,7 @@ Chat.Box = ({ children }: { children: ReactNode }) => {
   return <StyledBox>{children}</StyledBox>;
 };
 
-Chat.Title = ({ children }: { children: ReactNode }) => (
-  <StyledTitle>
-    <h2>{children}</h2>
-  </StyledTitle>
-);
+Chat.Title = ({ children }: { children: ReactNode }) => <StyledTitle>{children}</StyledTitle>;
 
 type InputProps = {
   value: string;
@@ -80,7 +89,7 @@ Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
 
   const updateTextBox = (text: string) => {
     const lineWidth = text.length * CHAR_WIDTH;
-    const numLines = Math.ceil(lineWidth / inputEl?.current?.clientWidth);
+    const numLines = Math.ceil(lineWidth / inputEl?.current?.clientWidth!);
     const heightValue = numLines * LINE_HEIGHT(numLines);
 
     setHeight(Math.min(heightValue, MAX_HEIGHT));

@@ -2,7 +2,7 @@ defmodule Rabble.Chats.Participant do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Rabble.Chats.Room
+  alias Rabble.Chats.{Room, Message}
   alias Rabble.Accounts.User
 
   @derive {Jason.Encoder, only: [:nickname, :user_id, :id]}
@@ -11,6 +11,7 @@ defmodule Rabble.Chats.Participant do
     field :nickname, :string
     belongs_to :room, Room
     belongs_to :user, User
+    has_many :messages, Message
 
     timestamps()
   end

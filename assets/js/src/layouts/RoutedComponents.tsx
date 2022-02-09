@@ -3,7 +3,7 @@ import { Outlet, Route, Routes } from 'react-router-dom';
 import Chat from '../components/Chat';
 
 function RoutedComponents() {
-  const noSelection = <Chat>nothing</Chat>;
+  const noSelection = <div>No Room</div>;
 
   return (
     <Routes>

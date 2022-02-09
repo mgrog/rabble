@@ -1,4 +1,4 @@
-type Message = { content: string; user_id: number; updated_at: string };
+type Message = { content: string; updated_at: string; participant: Participant };
 
 type Participant = { id: number; user_id: number; nickname: string };
 

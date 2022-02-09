@@ -9,7 +9,7 @@ type SetStore = Dispatch<SetStateAction<Store>>;
 
 const AppContext = createContext<{ store: Store; setStore: SetStore }>({
   store: {},
-  setStore: null,
+  setStore: null!,
 });
 
 const AppContextProvider = ({ children }: { children: ReactNode[] }) => {

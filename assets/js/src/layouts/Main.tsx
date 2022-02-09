@@ -1,7 +1,7 @@
 import { styled } from '../../stitches.config';
 import React, { ReactNode, useContext, useEffect } from 'react';
 import { Container } from 'semantic-ui-react';
-import SideMenu from '../components/SideMenu';
+import { SideMenu } from '../components/SideMenu';
 
 function MainLayout({ children }: { children: ReactNode }) {
   return (
@@ -41,6 +41,10 @@ const StyledDynamicContent = styled('div', {
   margin: '0 1.5em',
   height: '100%',
   backgroundColor: 'white',
+  border: '$semantic-border',
+  boxShadow: '$semantic-shadow',
+  borderRadius: '$semantic-border-radius',
+  padding: '0.5rem',
 });
 
 export default MainLayout;

@@ -1,17 +1,17 @@
 import React from 'react';
-import { ChatMessage } from '../shared/interfaces/chat-message.interface';
-import { Image } from 'semantic-ui-react';
 import { HasChildren } from '../shared/types/HasChildren.type';
 import { styled } from '../../stitches.config';
+// @ts-ignore
+import Identicon from 'react-identicons';
 
 type Props = {
-  messages: ChatMessage[];
+  feedMessages: { name: string; date: string; content: string }[];
 };
 
-const Feed = ({ messages }: Props) => {
-  const renderedEvents = messages.map((x, i) => (
+const Feed = ({ feedMessages }: Props) => {
+  const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
-      <Feed.Avatar />
+      <Feed.Avatar seed={x.name} />
       <Feed.Content>
         <Feed.Summary name={x.name} date={x.date} />
         <Feed.Message content={x.content} />
@@ -25,14 +25,10 @@ Feed.Event = ({ children }: HasChildren) => {
   return <StyledEvent>{children}</StyledEvent>;
 };
 
-Feed.Avatar = () => {
+Feed.Avatar = ({ seed }: { seed: string }) => {
   return (
     <StyledAvatar>
-      <Image
-        circular
-        size="mini"
-        src="https://react.semantic-ui.com/images/avatar/small/elliot.jpg"
-      />
+      <Identicon bg="black" size="25" string={seed}></Identicon>
     </StyledAvatar>
   );
 };
