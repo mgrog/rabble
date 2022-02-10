@@ -1,18 +1,20 @@
 import { styled } from '../../stitches.config';
 import React, { ReactNode, useContext, useEffect } from 'react';
+import { Nav } from '../components/Nav';
 import { Container } from 'semantic-ui-react';
 import { SideMenu } from '../components/SideMenu';
 
 function MainLayout({ children }: { children: ReactNode }) {
   return (
     <Page>
+      <Nav></Nav>
       <StyledLayout>
         <StyledSideContainer>
           <SideMenu />
         </StyledSideContainer>
-        <Container fluid>
-          <StyledDynamicContent>{children}</StyledDynamicContent>
-        </Container>
+        <StyledDynamicContent>
+          <Container fluid>{children}</Container>
+        </StyledDynamicContent>
       </StyledLayout>
     </Page>
   );
@@ -31,20 +33,19 @@ const StyledLayout = styled('div', {
 });
 
 const StyledSideContainer = styled('div', {
-  position: 'sticky',
-  top: '14px',
-  height: '100vh',
-  zIndex: 500,
+  '& .ui[class*="left fixed"].menu': {
+    top: '$navbar-spacing',
+    height: 'calc(100% - 40px)',
+    minWidth: '16rem',
+    backgroundColor: 'white',
+  },
 });
 
 const StyledDynamicContent = styled('div', {
-  margin: '0 1.5em',
+  margin: '0 1.5em 0 235px',
+  width: 'calc(100% - 235px)',
   height: '100%',
   backgroundColor: 'white',
-  border: '$semantic-border',
-  boxShadow: '$semantic-shadow',
-  borderRadius: '$semantic-border-radius',
-  padding: '0.5rem',
 });
 
 export default MainLayout;

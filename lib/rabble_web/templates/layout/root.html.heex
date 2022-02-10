@@ -9,9 +9,10 @@
     <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/assets/app.css")}/>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Righteous&display=swap" rel="stylesheet">
     <%= if @conn.assigns.current_user do %>
       <script> window.userToken="<%= Phoenix.Token.sign(RabbleWeb.Endpoint, "user_socket", @conn.assigns.current_user.id) %>"</script>
+      <script> window.csrf_token="<%= Phoenix.Controller.get_csrf_token() %>"</script>
     <% end %>
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
   </head>

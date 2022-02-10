@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { HasChildren } from '../shared/types/HasChildren.type';
 import { styled } from '../../stitches.config';
 // @ts-ignore
@@ -9,6 +9,14 @@ type Props = {
 };
 
 const Feed = ({ feedMessages }: Props) => {
+  const feedEnd = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (feedMessages.length) {
+      feedEnd!.current?.scrollIntoView();
+    }
+  }, [feedMessages]);
+
   const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
       <Feed.Avatar seed={x.name} />
@@ -18,7 +26,12 @@ const Feed = ({ feedMessages }: Props) => {
       </Feed.Content>
     </Feed.Event>
   ));
-  return <>{renderedEvents}</>;
+  return (
+    <>
+      {renderedEvents}
+      <div ref={feedEnd} id="feedEnd"></div>
+    </>
+  );
 };
 
 Feed.Event = ({ children }: HasChildren) => {

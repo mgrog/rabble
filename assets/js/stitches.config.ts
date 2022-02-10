@@ -274,6 +274,9 @@ export const { styled, css, globalCss, keyframes, getCssText, theme, createTheme
         'drop-shadow-none': 'drop-shadow(0 0 #0000)',
         'semantic-shadow': '0 1px 2px 0 rgb(34 36 38 / 15%)',
       },
+      space: {
+        'navbar-spacing': '50px',
+      },
     },
     media: {
       sm: '(min-width: 640px)',

@@ -59,8 +59,7 @@ const SideMenu = () => {
   };
 
   return (
-    <Menu vertical compact style={{ height: '100%' }}>
-      <SideMenu.Header />
+    <Menu vertical compact secondary fixed="left">
       {panelState && <SidePanel mode={panelState} onSubmit={addChat} setClosed={setPanelState} />}
       <SideMenu.Controls togglePanel={togglePanel} />
       <SideMenu.Content
@@ -70,10 +69,6 @@ const SideMenu = () => {
       />
     </Menu>
   );
-};
-
-SideMenu.Header = () => {
-  return <a>Rabble</a>;
 };
 
 SideMenu.Controls = ({ togglePanel }: { togglePanel: (action: PanelMode) => void }) => {
@@ -122,9 +117,11 @@ SideMenu.Content = ({ links, editRoom, leaveRoom }: ContentProps) => {
     <>
       <StyledLinksContainer>{renderedChatrooms}</StyledLinksContainer>
       <StyledMenuFilter>
-        <Menu.Item>
-          <Input icon="search" placeholder="Filter rooms..." />
-        </Menu.Item>
+        <Menu.Menu position="right">
+          <Menu.Item>
+            <Input icon="search" placeholder="Filter rooms..." />
+          </Menu.Item>
+        </Menu.Menu>
       </StyledMenuFilter>
     </>
   );
@@ -136,6 +133,7 @@ const StyledControls = styled('div', {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  marginTop: '0.5rem',
   padding: '0.2em 1em',
 
   '& span': {
@@ -154,18 +152,23 @@ const StyledItem = styled('div', {
   alignItems: 'center',
 
   '& .item': {
-    padding: '0 !important',
+    paddingTop: '0 !important',
+    paddingBottom: '0 !important',
   },
 });
 
 const StyledLinksContainer = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
   maxHeight: 'calc(100vh - 142px)',
   overflowY: 'auto',
 });
 
 const StyledMenuFilter = styled('div', {
-  position: 'sticky',
-  top: 'calc(100vh - 71px)',
+  position: 'absolute',
+  bottom: 0,
+  marginBottom: '1rem',
+  width: '100%',
 });
 
 const Dangerlink = styled('a', {

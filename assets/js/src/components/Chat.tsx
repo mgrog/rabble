@@ -51,12 +51,21 @@ const Chat = () => {
     channel.broadcast('message', { content });
   };
 
+  const renderedMembers = participants
+    .slice(0, 8)
+    .map((x) => <a title={`${x.nickname}'s user profile`}>@{x.nickname}</a>);
+
   return (
     <>
       <Chat.Title>
         <Header as={'h2'}>
           {title || 'loading...'}
-          <Header.Subheader>{participants.length} members</Header.Subheader>
+          <Header.Subheader>
+            <StyledUserLink>
+              <span>{participants.length} members</span> {renderedMembers}{' '}
+              {participants.length > 8 && <a>...</a>}
+            </StyledUserLink>
+          </Header.Subheader>
         </Header>
       </Chat.Title>
       <Chat.Box>
@@ -127,13 +136,14 @@ const StyledBox = styled('div', {
   position: 'relative',
   backgroundColor: 'white',
   overflowY: 'auto',
-  height: '200vh',
-  padding: '1rem 2rem',
+  height: 'auto',
+  minHeight: 'calc(100vh - 40px)',
+  padding: '0 2rem',
 });
 
 const StyledTitle = styled('div', {
   position: 'sticky',
-  top: 14,
+  top: '$navbar-spacing',
   zIndex: 2,
   backgroundColor: 'white',
   padding: '1rem 2rem',
@@ -157,6 +167,19 @@ const StyledInput = styled('textarea', {
 
   '&:focus': {
     outline: 'solid $blue-800',
+  },
+});
+
+const StyledUserLink = styled('div', {
+  display: 'inline-flex',
+  textOverflow: 'ellipsis',
+
+  '& a': {
+    margin: '0 0.2rem',
+  },
+
+  '& span': {
+    whiteSpace: 'nowrap',
   },
 });
 
