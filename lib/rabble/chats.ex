@@ -111,6 +111,7 @@ defmodule Rabble.Chats do
   end
 
   alias Rabble.Chats.Room
+  alias Rabble.Accounts
   alias Rabble.Accounts.User
 
   @doc """
@@ -201,9 +202,12 @@ defmodule Rabble.Chats do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_room(%Room{} = room, attrs) do
+  def update_room(%Room{} = room, attrs \\ %{}) do
+    IO.puts("rooooom")
+    IO.inspect(room)
+
     room
-    |> Room.changeset(attrs)
+    |> change_room(attrs)
     |> Repo.update()
   end
 
@@ -238,8 +242,47 @@ defmodule Rabble.Chats do
       %Ecto.Changeset{data: %Room{}}
 
   """
-  def change_room(%Room{} = room, attrs \\ %{}) do
-    Room.changeset(room, attrs)
+  def change_room(%Room{} = room, attrs) do
+    IO.inspect(attrs)
+    user_ids = for p <- attrs["participants"], do: p["user_id"]
+
+    new_users = Accounts.by_ids(user_ids)
+
+    IO.inspect(new_users)
+
+    attrs =
+      attrs
+      |> Map.put("users", new_users)
+
+    room
+    |> Repo.preload(:users)
+    |> Room.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:users, new_users)
+  end
+
+  def leave_room(%{"id" => room_id, "participants" => participants} = _attrs, %User{} = user) do
+    # if user is last participant
+    head = List.first(participants)
+
+    if length(participants) == 1 && head["user_id"] == user.id do
+      # delete the room
+      room_id
+      |> get_room!()
+      |> delete_room()
+    else
+      # delete just the roomuser association
+      "roomusers"
+      |> where(room_id: ^room_id)
+      |> where(user_id: ^user.id)
+      |> Repo.delete_all()
+      |> case do
+        {x, _} when x > 0 ->
+          {:ok, %{user: user, room: get_room!(room_id)}}
+
+        _ ->
+          {:error, "Something happened when leaving the room!"}
+      end
+    end
   end
 
   alias Rabble.Chats.Participant

@@ -1,11 +1,13 @@
 import { Socket } from 'phoenix';
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
+import { Dispatch, Reducer, SetStateAction, useContext, useEffect, useState } from 'react';
 import SocketContext from '../contexts/SocketContext';
 
-type MessageCB = (event: string, payload: any) => void;
-const defaultCB = (_e: string, _pl: any) => undefined;
+interface OnCompleteOptions {
+  onMessage?: <D extends { type: any; payload: any }>(dispatch: D) => void;
+  setState?: () => void;
+}
 
-const useChannel = (channelTopic: string, onMessage: MessageCB = defaultCB) => {
+const useChannel = (channelTopic: string, options: OnCompleteOptions = {}) => {
   const socket = useContext(SocketContext);
 
   const [broadcast, setBroadcast] =
@@ -14,7 +16,7 @@ const useChannel = (channelTopic: string, onMessage: MessageCB = defaultCB) => {
   const [error, setError] = useState('');
 
   useEffect(
-    () => joinChannel(socket, channelTopic, onMessage, setBroadcast, setLoading, setError),
+    () => joinChannel(socket, channelTopic, setBroadcast, setLoading, setError, options),
     [channelTopic],
   );
 
@@ -24,16 +26,18 @@ const useChannel = (channelTopic: string, onMessage: MessageCB = defaultCB) => {
 const joinChannel = (
   socket: Socket,
   channelTopic: string,
-  onMessage: MessageCB,
   setBroadcast: Dispatch<SetStateAction<(eventName: string, payload: object) => void>>,
   setLoading: Dispatch<SetStateAction<boolean>>,
   setError: Dispatch<SetStateAction<string>>,
+  options: OnCompleteOptions,
 ) => {
   const channel = socket.channel(channelTopic, { client: 'browser' });
 
   channel.onMessage = (event, payload) => {
     if (event != null && !event.startsWith('chan_reply_')) {
-      onMessage(event, payload);
+      options.onMessage && options.onMessage({ type: event, payload });
+      options.setState && options.setState();
+      setLoading(false);
     }
 
     return payload;
@@ -49,9 +53,10 @@ const joinChannel = (
       setError(reason);
     });
 
-  setBroadcast(
-    (_oldstate: any) => (eventName: string, payload: object) => channel.push(eventName, payload),
-  );
+  setBroadcast((_oldstate: any) => (eventName: string, payload: object) => {
+    setLoading(true);
+    channel.push(eventName, payload);
+  });
 
   return () => {
     channel.leave();
@@ -63,4 +68,4 @@ const mustJoinChannelWarning = (_oldstate: any) => (_eventName: string, _payload
     `useChannel broadcast function cannot be invoked before the channel has been joined`,
   );
 
-export { useChannel, MessageCB };
+export { useChannel };

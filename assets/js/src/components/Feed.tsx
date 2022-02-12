@@ -3,9 +3,10 @@ import { HasChildren } from '../shared/types/HasChildren.type';
 import { styled } from '../../stitches.config';
 // @ts-ignore
 import Identicon from 'react-identicons';
+import { Message } from '../shared/interfaces/structs.interfaces';
 
 type Props = {
-  feedMessages: { name: string; date: string; content: string }[];
+  feedMessages: Message[];
 };
 
 const Feed = ({ feedMessages }: Props) => {
@@ -19,18 +20,18 @@ const Feed = ({ feedMessages }: Props) => {
 
   const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
-      <Feed.Avatar seed={x.name} />
+      <Feed.Avatar seed={x.participant.nickname} />
       <Feed.Content>
-        <Feed.Summary name={x.name} date={x.date} />
+        <Feed.Summary name={x.participant.nickname} date={x.updated_at} />
         <Feed.Message content={x.content} />
       </Feed.Content>
     </Feed.Event>
   ));
   return (
-    <>
+    <StyledFeed>
       {renderedEvents}
       <div ref={feedEnd} id="feedEnd"></div>
-    </>
+    </StyledFeed>
   );
 };
 
@@ -64,6 +65,11 @@ Feed.Message = ({ content }: { content: string }) => {
 };
 
 // styles
+
+const StyledFeed = styled('div', {
+  marginTop: '50px',
+  overflowY: 'auto',
+});
 
 const StyledEvent = styled('div', {
   display: 'flex',

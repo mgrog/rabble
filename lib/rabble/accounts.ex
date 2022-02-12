@@ -23,6 +23,17 @@ defmodule Rabble.Accounts do
     Repo.all(User)
   end
 
+  def by_ids(ids) do
+    query =
+      from(
+        u in User,
+        where: u.id in ^ids,
+        select: u
+      )
+
+    Repo.all(query)
+  end
+
   @doc """
   Gets a single user.
 

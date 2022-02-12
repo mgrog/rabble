@@ -1,6 +1,7 @@
 defmodule RabbleWeb.GlobalChannel do
   use RabbleWeb, :channel
   alias Rabble.{Chats, Accounts}
+  alias Rabble.Chats.Room
 
   @impl true
   def join("global:lobby", payload, socket) do
@@ -23,9 +24,10 @@ defmodule RabbleWeb.GlobalChannel do
 
     case Chats.create_room(attrs, [curr_usr_participant | attrs["participants"]]) do
       {:ok, room} ->
-        for %{"user_id" => user_id} <- attrs["participants"] do
-          broadcast!(socket, "joined_room", %{id: user_id, chatroom: room})
-        end
+        broadcast!(socket, "joined_room", %{
+          data: room,
+          to_notify: notify_list(attrs["participants"])
+        })
 
         {:noreply, socket}
 
@@ -35,38 +37,75 @@ defmodule RabbleWeb.GlobalChannel do
   end
 
   @impl true
-  def handle_in("join_room", _attrs, _socket) do
+  def handle_in("edit_room", %{"room" => room} = attrs, socket) do
+    Chats.get_room!(room["id"])
+    |> Chats.update_room(attrs)
+    |> case do
+      {:ok, room} ->
+        broadcast!(socket, "updated_room", %{
+          data: room,
+          to_notify: notify_list(room.participants)
+        })
+
+        {:noreply, socket}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_in("leave_room", attrs, socket) do
     IO.inspect(attrs)
+    usr = socket.assigns.user
 
-    case Chats.delete_room(%{delete_id: attrs["id"]}) do
-      {:ok, room} ->
-        for %{"user_id" => user_id} <- attrs["participants"] do
-          broadcast!(socket, "left_room", %{id: user_id, chatroom: room})
-        end
+    case Chats.leave_room(attrs, usr) do
+      {:ok, %Room{} = room} ->
+        broadcast!(socket, "deleted_room", %{data: room, to_notify: [socket.assigns.user_id]})
+        {:noreply, socket}
+
+      {:ok, %{room: room, user: user}} ->
+        broadcast!(socket, "left_room", %{data: room, to_notify: notify_list(room.participants)})
+        broadcast!(socket, "deleted_room", %{data: room, to_notify: [socket.assigns.user_id]})
+
+        RabbleWeb.Endpoint.broadcast_from!(
+          self(),
+          "room:#{room.id}",
+          "user_left",
+          %{
+            data: %{user: user}
+          }
+        )
 
         {:noreply, socket}
 
-      {:error, changeset} ->
-        {:reply, {:error, %{errors: changeset}}, socket}
+      {:error, msg} ->
+        {:reply, {:error, %{errors: msg}}, socket}
     end
   end
 
-  Phoenix.Channel.intercept(["joined_room", "left_room"])
+  Phoenix.Channel.intercept(["joined_room", "left_room", "deleted_room"])
 
   @impl true
   def handle_out(topic, attrs, socket) do
-    if attrs.id != socket.assigns[:user_id] do
+    if socket.assigns[:user_id] in attrs.to_notify do
+      push(socket, topic, Map.drop(attrs, [:to_notify]))
       {:noreply, socket}
     else
-      push(socket, topic, attrs)
       {:noreply, socket}
     end
 
     {:noreply, socket}
+  end
+
+  def notify_list([%{"user_id" => _} = _head | _rest] = list) do
+    for x <- list, do: x["user_id"]
+  end
+
+  def notify_list([%{user_id: _} = _head | _rest] = list) do
+    for x <- list, do: x.user_id
   end
 
   # Add authorization logic here as required.

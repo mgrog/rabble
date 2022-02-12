@@ -2,6 +2,7 @@ defmodule Rabble.Chats.Room do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Rabble.Accounts
   alias Rabble.Accounts.User
   alias Rabble.Chats.{Message, Participant}
 

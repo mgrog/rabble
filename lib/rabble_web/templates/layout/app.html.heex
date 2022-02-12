@@ -1,10 +1,18 @@
 <main>
-  <%= if get_flash(@conn, :info) do %>
-    <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+  <%= if get_flash(@conn, :error) do %>
+    <div class="top right ui toast-container">
+      <div class="toast-box floating">
+      <div class="floating toast neutral black"><%= get_flash(@conn, :error) %></div>
+      </div>
+    </div>  
   <% end %>
 
-  <%= if get_flash(@conn, :error) do %>
-    <div class="toast error"><%= get_flash(@conn, :error) %></div>
+  <%= if get_flash(@conn, :info) do %>
+    <div class="top right ui toast-container">
+      <div class="toast-box floating">
+      <div class="floating toast neutral black"><%= get_flash(@conn, :error) %></div>
+      </div>
+    </div> 
   <% end %>
 
   <%= @inner_content %>

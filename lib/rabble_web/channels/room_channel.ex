@@ -27,12 +27,18 @@ defmodule RabbleWeb.RoomChannel do
     case Chats.create_message(data) do
       {:ok, msg} ->
         IO.inspect(msg)
-        broadcast!(socket, "message_added", msg)
+        broadcast!(socket, "message_added", %{data: msg})
         {:noreply, socket}
 
       {:error, changeset} ->
         {:reply, {:error, %{errors: changeset}}, socket}
     end
+  end
+
+  @impl true
+  def handle_in("user_left", attrs, socket) do
+    IO.puts("+++++++++++ user left ++++++++")
+    IO.inspect(attrs)
   end
 
   # Phoenix.Channel.intercept(["message_added"])

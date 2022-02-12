@@ -12,9 +12,7 @@ function MainLayout({ children }: { children: ReactNode }) {
         <StyledSideContainer>
           <SideMenu />
         </StyledSideContainer>
-        <StyledDynamicContent>
-          <Container fluid>{children}</Container>
-        </StyledDynamicContent>
+        <StyledDynamicContent>{children}</StyledDynamicContent>
       </StyledLayout>
     </Page>
   );
@@ -36,13 +34,13 @@ const StyledSideContainer = styled('div', {
   '& .ui[class*="left fixed"].menu': {
     top: '$navbar-spacing',
     height: 'calc(100% - 40px)',
-    minWidth: '16rem',
+    minWidth: '232px',
     backgroundColor: 'white',
   },
 });
 
 const StyledDynamicContent = styled('div', {
-  margin: '0 1.5em 0 235px',
+  margin: '0 4px 0 235px',
   width: 'calc(100% - 235px)',
   height: '100%',
   backgroundColor: 'white',

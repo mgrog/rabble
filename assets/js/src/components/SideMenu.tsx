@@ -6,46 +6,69 @@ import { Button, Icon, Input, Item, Menu } from 'semantic-ui-react';
 import { styled } from '../../stitches.config';
 import SidePanel from './SidePanel';
 import { AppContext } from '../contexts/AppContext';
+import { PhxBroadcast, PhxReply } from '../shared/interfaces/phx-response.types';
 
-type PanelMode = 'create' | 'edit' | null;
+type CreateChat = {
+  action: 'create';
+  data: string;
+};
+
+type EditChat = {
+  action: 'edit';
+  data: Room;
+};
+
+type ChatDataDispatch = CreateChat | EditChat;
+
+type AccountResponse =
+  | PhxReply<{ user: User }>
+  | PhxBroadcast<'joined_room' | 'left_room' | 'deleted_room', Room>;
 
 const SideMenu = () => {
   const navigate = useNavigate();
-  const [panelState, setPanelState] = useState<PanelMode>(null);
-  const { store, setStore } = useContext(AppContext);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const { setStore } = useContext(AppContext);
   const [links, setLinks] = useState<Room[]>([]);
-
-  const togglePanel = (action: PanelMode) => {
-    setPanelState(action);
-  };
+  const [roomToEdit, setRoomToEdit] = useState<Room | undefined>();
 
   const onChannel = useCallback(
-    (event, payload) => {
-      switch (event) {
+    (dispatch: AccountResponse) => {
+      console.log(dispatch);
+      switch (dispatch.type) {
         case 'phx_reply':
-          console.log('channel connected', event, payload);
-          const { user } = payload.response;
-          setLinks(user?.rooms);
-          return setStore({ user: user });
+          const { response } = dispatch.payload;
+          if (dispatch.payload.status === 'ok') {
+            const { user } = response;
+            setLinks(user.rooms);
+            return setStore({ user: user });
+          } else {
+            return;
+          }
         case 'joined_room':
-          console.log('joined', event, payload);
-          addLink(payload.chatroom);
-          return;
         case 'left_room':
+          updateLink(dispatch.payload.data);
+          return;
+        case 'deleted_room':
+          removeLink(dispatch.payload.data.id);
           return;
       }
     },
     [setStore],
   );
 
-  const channel = useChannel('global:lobby', onChannel);
+  const channel = useChannel('global:lobby', {
+    onMessage: onChannel,
+    setState: () => setPanelOpen(false),
+  });
 
-  const addLink = (room: Room) => setLinks((prev) => [...prev, room]);
-  const removeLink = (id: number) => setLinks((prev) => prev.filter((x) => x.id === id));
+  const updateLink = (room: Room) =>
+    setLinks((prev) => prev.filter((x) => x.id !== room.id).concat([room]));
+
+  const removeLink = (id: number) => setLinks((prev) => prev.filter((x) => x.id !== id));
 
   const editRoom = (e: MouseEvent, room: Room) => {
     e.preventDefault();
-    setPanelState('edit');
+    openRoomPanel(room);
   };
 
   const leaveRoom = (e: MouseEvent, room: Room) => {
@@ -54,14 +77,39 @@ const SideMenu = () => {
     channel.broadcast('leave_room', room);
   };
 
-  const addChat = (roomName: string, participants: Participant[]) => {
-    channel.broadcast('create_new', { title: roomName, participants });
+  const saveChat = ({
+    dispatch,
+    participants,
+  }: {
+    dispatch: ChatDataDispatch;
+    participants: Participant[];
+  }) => {
+    switch (dispatch.action) {
+      case 'create':
+        return channel.broadcast('create_new', { title: dispatch.data, participants });
+      case 'edit':
+        return channel.broadcast(`edit_room`, { room: dispatch.data, participants });
+      default:
+        'do nothing';
+    }
+  };
+
+  const openRoomPanel = (room?: Room) => {
+    setRoomToEdit(room);
+    setPanelOpen(true);
   };
 
   return (
     <Menu vertical compact secondary fixed="left">
-      {panelState && <SidePanel mode={panelState} onSubmit={addChat} setClosed={setPanelState} />}
-      <SideMenu.Controls togglePanel={togglePanel} />
+      {panelOpen && (
+        <SidePanel
+          toEdit={roomToEdit}
+          onSubmit={saveChat}
+          setClosed={() => setPanelOpen(false)}
+          actionLoading={channel.loading}
+        />
+      )}
+      <SideMenu.Controls openCreatePanel={() => openRoomPanel()} />
       <SideMenu.Content
         links={links}
         editRoom={editRoom}
@@ -71,7 +119,7 @@ const SideMenu = () => {
   );
 };
 
-SideMenu.Controls = ({ togglePanel }: { togglePanel: (action: PanelMode) => void }) => {
+SideMenu.Controls = ({ openCreatePanel }: { openCreatePanel: () => void }) => {
   return (
     <StyledControls>
       <span>Chatrooms</span>
@@ -81,7 +129,7 @@ SideMenu.Controls = ({ togglePanel }: { togglePanel: (action: PanelMode) => void
         basic
         icon="plus"
         size="mini"
-        onClick={() => togglePanel('create')}></Button>
+        onClick={() => openCreatePanel()}></Button>
     </StyledControls>
   );
 };
@@ -93,7 +141,7 @@ type ContentProps = {
 };
 
 SideMenu.Content = ({ links, editRoom, leaveRoom }: ContentProps) => {
-  const renderedChatrooms = links.map((x) => (
+  const renderedChatrooms = links?.map((x) => (
     <Menu.Item as={NavLink} to={`/chatrooms/${x.id}`} id={x.id} key={x.id} name={x.title}>
       <StyledItem>
         <Item>
@@ -176,4 +224,4 @@ const Dangerlink = styled('a', {
   float: 'right',
 });
 
-export { SideMenu, PanelMode };
+export { SideMenu, ChatDataDispatch };
