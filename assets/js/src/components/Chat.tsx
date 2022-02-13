@@ -10,7 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useChannel } from '../hooks/useChannel';
 import { styled } from '../../stitches.config';
 import Feed from './Feed';
-import { Message, Participant, Room } from '../shared/interfaces/structs.interfaces';
+import { Message, Participant, Room, User } from '../shared/interfaces/structs.interfaces';
 import { Header } from 'semantic-ui-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { PhxBroadcast, PhxReply } from '../shared/interfaces/phx-response.types';
@@ -19,10 +19,14 @@ const Chat = () => {
   const params = useParams();
   const [currentMessage, setCurrentMessage] = useState('');
   const [title, setTitle] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Partial<Message>[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
 
-  type ChatResponse = PhxReply<{ room: Room }> | PhxBroadcast<'message_added', Message>;
+  type ChatResponse =
+    | PhxReply<{ room: Room }>
+    | PhxBroadcast<'message_added', Message>
+    | PhxBroadcast<'user_left', User>
+    | PhxBroadcast<'users_edited', Participant[]>;
 
   const chatConnect = useCallback(
     (dispatch: ChatResponse) => {
@@ -36,6 +40,15 @@ const Chat = () => {
           return;
         case 'message_added':
           setMessages((prevState) => [...prevState, { ...dispatch.payload.data }]);
+          return;
+        case 'user_left':
+          let u = dispatch.payload.data;
+          setMessages((prevState) => [...prevState, { content: `${u.nickname} left` }]);
+          return;
+        case 'users_edited':
+          let newParticipants = dispatch.payload.data;
+          setParticipants(newParticipants);
+          return;
       }
     },
     [setMessages],
@@ -122,7 +135,7 @@ Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
 const StyledBox = styled('div', {
   position: 'relative',
   backgroundColor: 'white',
-  minHeight: 'calc(100vh - 50px)',
+  minHeight: '100%',
   height: 'auto',
   padding: '0 2rem',
 });
@@ -153,6 +166,7 @@ const StyledInput = styled('div', {
     outlineOffset: '0',
     resize: 'none',
     fontFamily: 'inherit',
+    overflow: 'hidden',
 
     '&:focus': {
       outline: 'solid $blue-800',

@@ -1,7 +1,7 @@
-import React, { Dispatch, SetStateAction, useContext, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import useAxios from 'axios-hooks';
 import { Button, Checkbox, Header, Input, List, Segment } from 'semantic-ui-react';
-import { Participant, Room } from '../shared/interfaces/structs.interfaces';
+import { Participant, Room, User } from '../shared/interfaces/structs.interfaces';
 import { styled } from '../../stitches.config';
 import { AppContext } from '../contexts/AppContext';
 // @ts-ignore
@@ -23,13 +23,17 @@ type Props = {
 };
 
 const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
-  const currentParticipants = toEdit?.participants || [];
   const { store } = useContext(AppContext);
   const [roomName, setRoomName] = useState('');
-  const [selectedUsers, setSelectedUsers] = useState<Participant[]>([...currentParticipants]);
+  const [selectedUsers, setSelectedUsers] = useState<Participant[]>([]);
   const [{ data, loading, error }] = useAxios('/api/participants');
   const ref = useRef(null);
   useOutsideClick(ref, () => setClosed());
+
+  useEffect(() => {
+    let usrs = (toEdit && toEdit.participants) || [];
+    setSelectedUsers(usrs);
+  }, [toEdit, setSelectedUsers]);
 
   const participants = data?.data.filter((p: Participant) => p.user_id !== store?.user?.id);
 
@@ -50,6 +54,7 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
         <Header as="h3">Edit {toEdit.title}</Header>
       )}
       <SidePanel.UsersSelect
+        currUser={store.user!.participant!}
         loading={loading}
         all={participants}
         selected={selectedUsers}
@@ -61,7 +66,7 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
         onClick={() =>
           onSubmit({
             dispatch: dispatchAction,
-            participants: [store.user!.participant, ...selectedUsers],
+            participants: [...selectedUsers],
           })
         }>
         {!toEdit ? 'Create' : 'Add Friends'}
@@ -71,32 +76,45 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
 };
 
 type UserSelectProps = {
+  currUser: Participant;
   all: Participant[];
   selected: Participant[];
   setSelected: Dispatch<SetStateAction<Participant[]>>;
   loading: boolean;
 };
 
-SidePanel.UsersSelect = ({ all, selected, setSelected, loading }: UserSelectProps) => {
+interface SelectItem extends Participant {
+  checked: boolean;
+}
+
+SidePanel.UsersSelect = ({ currUser, all, selected, setSelected, loading }: UserSelectProps) => {
+  const [items, setItems] = useState<SelectItem[]>([]);
+
   const changeSelected = (prevState: Participant[], value: boolean, user: Participant) => {
+    let newState = [];
     if (value === true) {
-      return [...prevState, user];
+      newState = [...prevState, user];
     } else {
-      return prevState.filter((u) => u.id === user.id);
+      newState = prevState.filter((u) => u.id === user.id);
     }
+    return [currUser, ...newState];
   };
 
-  const pMap = selected.reduce(
-    (accum: { [k: number]: true }, x: Participant) => ((accum[x.id] = true), accum),
-    {},
-  );
+  useEffect(() => {
+    let map = selected?.reduce(
+      (accum, x: Participant) => ((accum[x.id] = true), accum),
+      {} as { [k: number]: boolean },
+    );
+    let mapped = all?.map((p) => ({ ...p, checked: map[p.id] }));
+    mapped && setItems(mapped);
+  }, [selected, all, setItems]);
 
-  const renderedItems = all?.map((p, i) => {
+  const renderedItems = items.map((p) => {
     return (
-      <List.Item key={i}>
+      <List.Item key={p.id}>
         <List.Content floated="right">
           <Checkbox
-            defaultChecked={pMap[p.id]}
+            checked={p.checked}
             onChange={(_e, data) =>
               setSelected((prevState) => changeSelected(prevState, data.checked!, p))
             }

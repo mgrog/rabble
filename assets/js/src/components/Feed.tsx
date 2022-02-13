@@ -6,29 +6,43 @@ import Identicon from 'react-identicons';
 import { Message } from '../shared/interfaces/structs.interfaces';
 
 type Props = {
-  feedMessages: Message[];
+  feedMessages: Partial<Message>[];
 };
 
 const Feed = ({ feedMessages }: Props) => {
+  const feedRef = useRef<HTMLDivElement>(null);
   const feedEnd = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (feedMessages.length) {
-      feedEnd!.current?.scrollIntoView();
+    if (
+      feedMessages.length &&
+      feedRef &&
+      feedRef!.current!.clientHeight > window.innerHeight - 200
+    ) {
+      feedEnd!.current!.scrollIntoView();
     }
   }, [feedMessages]);
 
   const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
-      <Feed.Avatar seed={x.participant.nickname} />
-      <Feed.Content>
-        <Feed.Summary name={x.participant.nickname} date={x.updated_at} />
-        <Feed.Message content={x.content} />
-      </Feed.Content>
+      {!x.participant && (
+        <>
+          <Feed.UserEvent content={x.content!} />
+        </>
+      )}
+      {x.participant && (
+        <>
+          <Feed.Avatar seed={x.participant.nickname} />
+          <Feed.Content>
+            <Feed.Summary name={x.participant.nickname} date={x.updated_at!} />
+            <Feed.Message content={x.content!} />
+          </Feed.Content>
+        </>
+      )}
     </Feed.Event>
   ));
   return (
-    <StyledFeed>
+    <StyledFeed ref={feedRef}>
       {renderedEvents}
       <div ref={feedEnd} id="feedEnd"></div>
     </StyledFeed>
@@ -62,6 +76,10 @@ Feed.Summary = ({ name, date }: { name: string; date: string }) => {
 
 Feed.Message = ({ content }: { content: string }) => {
   return <Message>{content}</Message>;
+};
+
+Feed.UserEvent = ({ content }: { content: string }) => {
+  return <p>{content}</p>;
 };
 
 // styles

@@ -22,7 +22,7 @@ type ChatDataDispatch = CreateChat | EditChat;
 
 type AccountResponse =
   | PhxReply<{ user: User }>
-  | PhxBroadcast<'joined_room' | 'left_room' | 'deleted_room', Room>;
+  | PhxBroadcast<'joined_room' | 'updated_room' | 'left_room' | 'deleted_room', Room>;
 
 const SideMenu = () => {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ const SideMenu = () => {
           }
         case 'joined_room':
         case 'left_room':
+        case 'updated_room':
           updateLink(dispatch.payload.data);
           return;
         case 'deleted_room':
@@ -61,10 +62,13 @@ const SideMenu = () => {
     setState: () => setPanelOpen(false),
   });
 
-  const updateLink = (room: Room) =>
-    setLinks((prev) => prev.filter((x) => x.id !== room.id).concat([room]));
+  const updateLink = (room: Room) => {
+    setLinks((prev) => [...prev.filter((x) => x.id !== room.id), room]);
+  };
 
-  const removeLink = (id: number) => setLinks((prev) => prev.filter((x) => x.id !== id));
+  const removeLink = (id: number) => {
+    setLinks((prev) => prev.filter((x) => x.id !== id));
+  };
 
   const editRoom = (e: MouseEvent, room: Room) => {
     e.preventDefault();

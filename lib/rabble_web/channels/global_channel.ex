@@ -47,6 +47,15 @@ defmodule RabbleWeb.GlobalChannel do
           to_notify: notify_list(room.participants)
         })
 
+        RabbleWeb.Endpoint.broadcast_from!(
+          self(),
+          "room:#{room.id}",
+          "users_edited",
+          %{
+            data: room.participants
+          }
+        )
+
         {:noreply, socket}
 
       {:error, changeset} ->
@@ -75,7 +84,7 @@ defmodule RabbleWeb.GlobalChannel do
           "room:#{room.id}",
           "user_left",
           %{
-            data: %{user: user}
+            data: user
           }
         )
 
@@ -86,7 +95,7 @@ defmodule RabbleWeb.GlobalChannel do
     end
   end
 
-  Phoenix.Channel.intercept(["joined_room", "left_room", "deleted_room"])
+  Phoenix.Channel.intercept(["joined_room", "left_room", "updated_room", "deleted_room"])
 
   @impl true
   def handle_out(topic, attrs, socket) do

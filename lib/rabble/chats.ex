@@ -209,6 +209,14 @@ defmodule Rabble.Chats do
     room
     |> change_room(attrs)
     |> Repo.update()
+    |> case do
+      {:ok, room} ->
+        rm = Repo.preload(room, :participants)
+        {:ok, rm}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
   end
 
   @doc """
