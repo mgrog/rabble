@@ -2,7 +2,7 @@ import useAxios from 'axios-hooks';
 import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 // @ts-ignore
 import Identicon from 'react-identicons';
-import { Button, Checkbox, Header, Input, List, Segment } from 'semantic-ui-react';
+import { Button, Checkbox, Header, Image, Input, List, Segment } from 'semantic-ui-react';
 import { styled } from '../../stitches.config';
 import { AppContext } from '../contexts/AppContext';
 import useOutsideClick from '../hooks/useOutsideClick';
@@ -116,8 +116,12 @@ SidePanel.UsersSelect = ({ all, selected, setSelected, loading }: UserSelectProp
             }
           />
         </List.Content>
-        <Identicon bg="black" size="25" string={p.nickname}></Identicon>
-        <List.Content>{p.nickname}</List.Content>
+        <Image>
+          <Identicon bg="black" size="25" string={p.nickname}></Identicon>
+        </Image>
+        <List.Content>
+          <List.Description>{p.nickname}</List.Description>
+        </List.Content>
       </List.Item>
     );
   });
