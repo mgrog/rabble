@@ -6,6 +6,10 @@
       <div class="ui compact toast error">Oops, something went wrong! Please check the errors below.</div>
   <% end %>
 
+  <%= label f, :nickname %>
+  <div class="ui input"><%= text_input f, :nickname, [class: "input"] %></div>
+  <%= error_tag f, :nickname %>
+
   <%= label f, Pow.Ecto.Schema.user_id_field(@changeset) %>
   <div class="ui input"><%= text_input f, Pow.Ecto.Schema.user_id_field(@changeset), [class: "input"] %></div>
   <%= error_tag f, Pow.Ecto.Schema.user_id_field(@changeset) %>
