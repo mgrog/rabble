@@ -5,6 +5,7 @@ import { styled } from '../../stitches.config';
 import { Message } from '../shared/interfaces/structs.interfaces';
 import { HasChildren } from '../shared/types/HasChildren.type';
 import { TypingStatus } from './Chat';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
 
 type Props = {
   feedMessages: Partial<Message>[];
@@ -25,6 +26,17 @@ const Feed = ({ feedMessages, typingStatus }: Props) => {
     }
   }, [feedMessages]);
 
+  const formatDate = (dateStr: string) => {
+    let d = parseISO(dateStr);
+    if (isToday(d)) {
+      return `Today at ${format(d, 'h:mm aaa')}`;
+    } else if (isYesterday(d)) {
+      return `Yesterday at ${format(d, 'h:mm aaa')}`;
+    } else {
+      return format(d, 'M/dd/yy h:mm aaa');
+    }
+  };
+
   const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
       {!x.participant && <Feed.UserEvent content={x.content!} />}
@@ -32,7 +44,7 @@ const Feed = ({ feedMessages, typingStatus }: Props) => {
         <>
           <Feed.Avatar seed={x.participant.nickname} />
           <Feed.Content>
-            <Feed.Summary name={x.participant.nickname} date={x.updated_at!} />
+            <Feed.Summary name={x.participant.nickname} date={formatDate(x.updated_at!)} />
             <Feed.Message content={x.content!} />
           </Feed.Content>
         </>

@@ -9,7 +9,7 @@ defmodule Rabble.Chats.Message do
     belongs_to :participant, Rabble.Chats.Participant
     belongs_to :room, Rabble.Chats.Room
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false
