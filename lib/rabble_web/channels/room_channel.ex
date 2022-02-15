@@ -42,7 +42,6 @@ defmodule RabbleWeb.RoomChannel do
 
     case Chats.create_message(data) do
       {:ok, msg} ->
-        IO.inspect(msg)
         broadcast!(socket, "message_added", %{data: msg})
         {:noreply, socket}
 

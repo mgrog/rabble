@@ -81,7 +81,6 @@ defmodule RabbleWeb.GlobalChannel do
   end
 
   def handle_in("leave_room", attrs, socket) do
-    IO.inspect(attrs)
     usr = socket.assigns.user
 
     case Chats.leave_room(attrs, usr) do

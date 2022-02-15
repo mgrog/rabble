@@ -204,7 +204,6 @@ defmodule Rabble.Chats do
   """
   def update_room(%Room{} = room, attrs \\ %{}) do
     IO.puts("rooooom")
-    IO.inspect(room)
 
     room
     |> change_room(attrs)
@@ -251,12 +250,9 @@ defmodule Rabble.Chats do
 
   """
   def change_room(%Room{} = room, attrs) do
-    IO.inspect(attrs)
     user_ids = for p <- attrs["participants"], do: p["user_id"]
 
     new_users = Accounts.by_ids(user_ids)
-
-    IO.inspect(new_users)
 
     attrs =
       attrs
