@@ -1,0 +1,1 @@
+call "%~dp0\rabble" eval Rabble.Release.migrate
