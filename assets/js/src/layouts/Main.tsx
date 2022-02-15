@@ -7,7 +7,7 @@ import { SideMenu } from '../components/SideMenu';
 function MainLayout({ children }: { children: ReactNode }) {
   return (
     <Page>
-      <Nav></Nav>
+      <Nav />
       <StyledLayout>
         <StyledSideContainer>
           <SideMenu />
@@ -22,15 +22,18 @@ const Page = styled('div', {
   display: 'flex',
   minHeight: '100vh',
   height: '100%',
-  width: '100%',
+  width: '100vw',
 });
 
 const StyledLayout = styled('div', {
   display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
   width: '100%',
 });
 
 const StyledSideContainer = styled('div', {
+  width: 232,
   '& .ui[class*="left fixed"].menu': {
     top: '$navbar-spacing',
     height: 'calc(100% - 40px)',
@@ -40,10 +43,11 @@ const StyledSideContainer = styled('div', {
 });
 
 const StyledDynamicContent = styled('div', {
-  margin: '0 4px 0 235px',
-  width: 'calc(100% - 235px)',
   height: '100%',
   backgroundColor: 'white',
+  flexGrow: 1,
+  margin: '0 2px',
+  overflow: 'hidden',
 });
 
 export default MainLayout;

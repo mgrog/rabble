@@ -1,15 +1,17 @@
 import React, { useEffect, useRef } from 'react';
-import { HasChildren } from '../shared/types/HasChildren.type';
-import { styled } from '../../stitches.config';
 // @ts-ignore
 import Identicon from 'react-identicons';
+import { styled } from '../../stitches.config';
 import { Message } from '../shared/interfaces/structs.interfaces';
+import { HasChildren } from '../shared/types/HasChildren.type';
+import { TypingStatus } from './Chat';
 
 type Props = {
   feedMessages: Partial<Message>[];
+  typingStatus: TypingStatus;
 };
 
-const Feed = ({ feedMessages }: Props) => {
+const Feed = ({ feedMessages, typingStatus }: Props) => {
   const feedRef = useRef<HTMLDivElement>(null);
   const feedEnd = useRef<HTMLDivElement>(null);
 
@@ -25,11 +27,7 @@ const Feed = ({ feedMessages }: Props) => {
 
   const renderedEvents = feedMessages.map((x, i) => (
     <Feed.Event key={i}>
-      {!x.participant && (
-        <>
-          <Feed.UserEvent content={x.content!} />
-        </>
-      )}
+      {!x.participant && <Feed.UserEvent content={x.content!} />}
       {x.participant && (
         <>
           <Feed.Avatar seed={x.participant.nickname} />
@@ -44,6 +42,12 @@ const Feed = ({ feedMessages }: Props) => {
   return (
     <StyledFeed ref={feedRef}>
       {renderedEvents}
+      {Object.keys(typingStatus)
+        .filter((k) => typingStatus[k].typing)
+        .map((k) => {
+          const { nickname } = typingStatus[k];
+          return <i key={k} style={{ paddingLeft: '2rem' }}>{`${nickname} is typing...`}</i>;
+        })}
       <div ref={feedEnd} id="feedEnd"></div>
     </StyledFeed>
   );
@@ -86,7 +90,9 @@ Feed.UserEvent = ({ content }: { content: string }) => {
 
 const StyledFeed = styled('div', {
   marginTop: '50px',
-  overflowY: 'auto',
+  height: 'auto',
+  minHeight: 'calc(100vh - 200px)',
+  paddingBottom: '8rem',
 });
 
 const StyledEvent = styled('div', {

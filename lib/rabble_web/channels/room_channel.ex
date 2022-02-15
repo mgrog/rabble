@@ -1,6 +1,7 @@
 defmodule RabbleWeb.RoomChannel do
   use RabbleWeb, :channel
   alias Rabble.Chats
+  alias RabbleWeb.Presence
 
   @impl true
   def join("room:" <> room_id, payload, socket) do
@@ -8,20 +9,35 @@ defmodule RabbleWeb.RoomChannel do
       id = String.to_integer(room_id)
       room = Rabble.Chats.get_room!(id)
       usr = Rabble.Accounts.get_user!(socket.assigns.user_id)
+      send(self(), :after_join)
 
-      {:ok, %{room: room}, assign(socket, room: room, participant_id: usr.participant.id)}
+      {:ok, %{room: room}, assign(socket, room: room, participant: usr.participant)}
     else
       {:error, %{reason: "unauthorized"}}
     end
   end
 
   @impl true
+  def handle_info(:after_join, socket) do
+    p = socket.assigns.participant
+
+    {:ok, _} =
+      Presence.track(socket, p.id, %{
+        nickname: p.nickname,
+        typing: false
+      })
+
+    push(socket, "presence_state", Presence.list(socket))
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_in("message", attrs, socket) do
-    %{participant_id: participant_id, room: room} = socket.assigns
+    %{participant: participant, room: room} = socket.assigns
 
     data =
       attrs
-      |> Map.put("participant_id", participant_id)
+      |> Map.put("participant_id", participant.id)
       |> Map.put("room", room)
 
     case Chats.create_message(data) do
@@ -35,22 +51,40 @@ defmodule RabbleWeb.RoomChannel do
     end
   end
 
-  @impl true
-  def handle_in("user_left", attrs, socket) do
-    IO.puts("+++++++++++ user left ++++++++")
-    IO.inspect(attrs)
+  def handle_in("status_update", %{"typing" => typing}, socket) do
+    p = socket.assigns.participant
+
+    case Presence.update(socket, p.id, %{id: p.id, nickname: p.nickname, typing: typing}) do
+      {:ok, _} ->
+        {:noreply, socket}
+
+      {:error, changeset} ->
+        {:reply, {:error, %{errors: changeset}}, socket}
+    end
   end
 
-  # Phoenix.Channel.intercept(["message_added"])
+  Phoenix.Channel.intercept(["presence_diff"])
 
-  # @impl true
-  # def handle_out("message_added", attrs, socket) do
-  #   if(attrs.user_id == socket.assigns.user.id) do
-  #     {:noreply, socket}
-  #   else
-  #     push(socket, "message_added", attrs)
-  #   end
-  # end
+  @impl true
+  def handle_out(
+        "presence_diff" = topic,
+        %{joins: joins, leaves: leaves},
+        %{assigns: %{participant: curr}} = socket
+      ) do
+    id = to_string(curr.id)
+    for_curr_user = Map.has_key?(joins, id) || Map.has_key?(leaves, id)
+
+    if !for_curr_user do
+      values =
+        for {key, val} <- Map.to_list(joins), into: %{} do
+          {key, val.metas |> List.first() |> Map.take([:nickname, :typing])}
+        end
+
+      push(socket, topic, values)
+    end
+
+    {:noreply, socket}
+  end
 
   # Add authorization logic here as required.
   defp authorized?(_payload) do

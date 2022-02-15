@@ -62,6 +62,17 @@ defmodule Rabble.Accounts do
     %User{usr | rooms: rooms}
   end
 
+  def get_users_map(ids) do
+    query =
+      from p in Chats.Participant,
+        where: p.user_id in ^ids,
+        select: {p.user_id, p}
+
+    query
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
   @doc """
   Creates a user.
 

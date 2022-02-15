@@ -1,6 +1,5 @@
-import React, { ReactNode, useEffect } from 'react';
 import { Socket } from 'phoenix';
-
+import React, { ReactNode, useEffect } from 'react';
 import SocketContext from '../contexts/SocketContext';
 
 type Props = {

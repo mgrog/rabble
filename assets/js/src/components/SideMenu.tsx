@@ -1,12 +1,19 @@
-import React, { useCallback, useContext, useState, MouseEvent } from 'react';
+import { Presence } from 'phoenix';
+import React, { MouseEvent, useCallback, useContext, useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useChannel } from '../hooks/useChannel';
-import { Participant, Room, User } from '../shared/interfaces/structs.interfaces';
-import { Button, Icon, Input, Item, Menu } from 'semantic-ui-react';
+import { Button, Header, Icon, Input, Item, Menu } from 'semantic-ui-react';
 import { styled } from '../../stitches.config';
-import SidePanel from './SidePanel';
 import { AppContext } from '../contexts/AppContext';
-import { PhxBroadcast, PhxReply } from '../shared/interfaces/phx-response.types';
+import { useChannel } from '../hooks/useChannel';
+import {
+  PhxBroadcast,
+  PhxPresence,
+  PhxReply,
+  PresenceDiff,
+  PresenceState,
+} from '../shared/interfaces/phx-response.types';
+import { Participant, Room, User } from '../shared/interfaces/structs.interfaces';
+import SidePanel from './SidePanel';
 
 type CreateChat = {
   action: 'create';
@@ -22,39 +29,51 @@ type ChatDataDispatch = CreateChat | EditChat;
 
 type AccountResponse =
   | PhxReply<{ user: User }>
-  | PhxBroadcast<'joined_room' | 'updated_room' | 'left_room' | 'deleted_room', Room>;
+  | PhxBroadcast<'joined_room' | 'updated_room' | 'left_room' | 'deleted_room', Room>
+  | PhxPresence<'presence_diff', PresenceDiff>
+  | PhxPresence<'presence_state', PresenceState>;
 
 const SideMenu = () => {
   const navigate = useNavigate();
   const [panelOpen, setPanelOpen] = useState(false);
-  const { setStore } = useContext(AppContext);
+  const { store, storeDispatch } = useContext(AppContext);
   const [links, setLinks] = useState<Room[]>([]);
   const [roomToEdit, setRoomToEdit] = useState<Room | undefined>();
 
   const onChannel = useCallback(
     (dispatch: AccountResponse) => {
-      console.log(dispatch);
-      switch (dispatch.type) {
-        case 'phx_reply':
-          const { response } = dispatch.payload;
-          if (dispatch.payload.status === 'ok') {
-            const { user } = response;
-            setLinks(user.rooms);
-            return setStore({ user: user });
-          } else {
+      // console.log(dispatch);
+      {
+        let presences;
+        switch (dispatch.type) {
+          case 'phx_reply':
+            const { response } = dispatch.payload;
+            if (dispatch.payload.status === 'ok') {
+              const { user } = response;
+              setLinks(user.rooms);
+              storeDispatch({ type: 'user', value: user });
+            }
             return;
-          }
-        case 'joined_room':
-        case 'left_room':
-        case 'updated_room':
-          updateLink(dispatch.payload.data);
-          return;
-        case 'deleted_room':
-          removeLink(dispatch.payload.data.id);
-          return;
+          case 'joined_room':
+          case 'left_room':
+          case 'updated_room':
+            updateLink(dispatch.payload.data);
+            return;
+          case 'deleted_room':
+            removeLink(dispatch.payload.data.id);
+            return;
+          case 'presence_diff':
+            presences = Presence.syncDiff(store.presences, dispatch.payload);
+            storeDispatch({ type: 'presences', value: presences });
+            return;
+          case 'presence_state':
+            presences = Presence.syncState(store.presences, dispatch.payload);
+            storeDispatch({ type: 'presences', value: presences });
+            return;
+        }
       }
     },
-    [setStore],
+    [store, storeDispatch],
   );
 
   const channel = useChannel('global:lobby', {
@@ -104,7 +123,7 @@ const SideMenu = () => {
   };
 
   return (
-    <Menu vertical compact secondary fixed="left">
+    <Menu vertical compact fixed="left">
       {panelOpen && (
         <SidePanel
           toEdit={roomToEdit}
@@ -114,6 +133,12 @@ const SideMenu = () => {
         />
       )}
       <SideMenu.Controls openCreatePanel={() => openRoomPanel()} />
+      {!links?.length && (
+        <Header as="h4" textAlign="center">
+          No Chatrooms!
+          <Header.Subheader>Click the (+) button!</Header.Subheader>
+        </Header>
+      )}
       <SideMenu.Content
         links={links}
         editRoom={editRoom}
@@ -145,7 +170,16 @@ type ContentProps = {
 };
 
 SideMenu.Content = ({ links, editRoom, leaveRoom }: ContentProps) => {
-  const renderedChatrooms = links?.map((x) => (
+  const [filteredLinks, setFilteredLinks] = useState<Room[]>([]);
+
+  useEffect(() => filter(''), [links]);
+
+  const filter = (text: string) => {
+    let filtered = links.filter((x) => !text || x.title.toLowerCase().includes(text.toLowerCase()));
+    setFilteredLinks(filtered);
+  };
+
+  const renderedChatrooms = filteredLinks?.map((x) => (
     <Menu.Item as={NavLink} to={`/chatrooms/${x.id}`} id={x.id} key={x.id} name={x.title}>
       <StyledItem>
         <Item>
@@ -171,7 +205,11 @@ SideMenu.Content = ({ links, editRoom, leaveRoom }: ContentProps) => {
       <StyledMenuFilter>
         <Menu.Menu position="right">
           <Menu.Item>
-            <Input icon="search" placeholder="Filter rooms..." />
+            <Input
+              icon="search"
+              placeholder="Filter rooms..."
+              onChange={(e) => filter(e.target.value)}
+            />
           </Menu.Item>
         </Menu.Menu>
       </StyledMenuFilter>
@@ -185,8 +223,9 @@ const StyledControls = styled('div', {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginTop: '0.5rem',
-  padding: '0.2em 1em',
+  margin: '0',
+  padding: '0.5rem 1.2rem',
+  borderBottom: '$semantic-border',
 
   '& span': {
     marginRight: '10px',
@@ -202,11 +241,6 @@ const StyledItem = styled('div', {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-
-  '& .item': {
-    paddingTop: '0 !important',
-    paddingBottom: '0 !important',
-  },
 });
 
 const StyledLinksContainer = styled('div', {
@@ -214,6 +248,22 @@ const StyledLinksContainer = styled('div', {
   flexDirection: 'column',
   maxHeight: 'calc(100vh - 142px)',
   overflowY: 'auto',
+
+  '& .item:not(a)': {
+    paddingLeft: '1.2rem !important',
+    paddingTop: '0.8rem !important',
+    paddingBottom: '0.8rem !important',
+
+    '&:last-child': {
+      borderBottom: '$semantic-border',
+    },
+  },
+
+  '& a': {
+    paddingLeft: '0 !important',
+    paddingTop: '0 !important',
+    paddingBottom: '0 !important',
+  },
 });
 
 const StyledMenuFilter = styled('div', {
@@ -221,11 +271,6 @@ const StyledMenuFilter = styled('div', {
   bottom: 0,
   marginBottom: '1rem',
   width: '100%',
-});
-
-const Dangerlink = styled('a', {
-  color: '$red-600',
-  float: 'right',
 });
 
 export { SideMenu, ChatDataDispatch };

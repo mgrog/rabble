@@ -1,12 +1,12 @@
-import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 import useAxios from 'axios-hooks';
-import { Button, Checkbox, Header, Input, List, Segment } from 'semantic-ui-react';
-import { Participant, Room, User } from '../shared/interfaces/structs.interfaces';
-import { styled } from '../../stitches.config';
-import { AppContext } from '../contexts/AppContext';
+import React, { Dispatch, SetStateAction, useContext, useEffect, useRef, useState } from 'react';
 // @ts-ignore
 import Identicon from 'react-identicons';
+import { Button, Checkbox, Header, Input, List, Segment } from 'semantic-ui-react';
+import { styled } from '../../stitches.config';
+import { AppContext } from '../contexts/AppContext';
 import useOutsideClick from '../hooks/useOutsideClick';
+import { Participant, Room } from '../shared/interfaces/structs.interfaces';
 import { ChatDataDispatch } from './SideMenu';
 
 type Props = {
@@ -35,7 +35,7 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
     setSelectedUsers(usrs);
   }, [toEdit, setSelectedUsers]);
 
-  const participants = data?.data.filter((p: Participant) => p.user_id !== store?.user?.id);
+  const selectOptions = data?.data.filter((p: Participant) => p.user_id !== store?.user?.id);
 
   const dispatchAction: ChatDataDispatch = toEdit
     ? { action: 'edit', data: toEdit }
@@ -54,9 +54,8 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
         <Header as="h3">Edit {toEdit.title}</Header>
       )}
       <SidePanel.UsersSelect
-        currUser={store.user!.participant!}
         loading={loading}
-        all={participants}
+        all={selectOptions}
         selected={selectedUsers}
         setSelected={setSelectedUsers}
       />
@@ -69,52 +68,49 @@ const SidePanel = ({ toEdit, onSubmit, setClosed, actionLoading }: Props) => {
             participants: [...selectedUsers],
           })
         }>
-        {!toEdit ? 'Create' : 'Add Friends'}
+        {!toEdit ? 'Create' : 'Save Changes'}
       </Button>
     </StyledPanel>
   );
 };
 
 type UserSelectProps = {
-  currUser: Participant;
   all: Participant[];
   selected: Participant[];
   setSelected: Dispatch<SetStateAction<Participant[]>>;
   loading: boolean;
 };
 
-interface SelectItem extends Participant {
-  checked: boolean;
-}
+SidePanel.UsersSelect = ({ all, selected, setSelected, loading }: UserSelectProps) => {
+  const [filteredUsers, setFilteredUsers] = useState<Participant[]>([]);
 
-SidePanel.UsersSelect = ({ currUser, all, selected, setSelected, loading }: UserSelectProps) => {
-  const [items, setItems] = useState<SelectItem[]>([]);
+  useEffect(() => filter(''), [all]);
+
+  const filter = (text: string) => {
+    let filtered = all?.filter(
+      (x) => !text || x.nickname.toLowerCase().includes(text.toLowerCase()),
+    );
+    setFilteredUsers(filtered);
+  };
 
   const changeSelected = (prevState: Participant[], value: boolean, user: Participant) => {
     let newState = [];
     if (value === true) {
       newState = [...prevState, user];
     } else {
-      newState = prevState.filter((u) => u.id === user.id);
+      newState = prevState.filter((u) => u.id !== user.id);
     }
-    return [currUser, ...newState];
+    return newState;
   };
 
-  useEffect(() => {
-    let map = selected?.reduce(
-      (accum, x: Participant) => ((accum[x.id] = true), accum),
-      {} as { [k: number]: boolean },
-    );
-    let mapped = all?.map((p) => ({ ...p, checked: map[p.id] }));
-    mapped && setItems(mapped);
-  }, [selected, all, setItems]);
+  let map = selected?.reduce((accum: any, x: Participant) => ((accum[x.id] = true), accum), {});
 
-  const renderedItems = items.map((p) => {
+  const renderedItems = filteredUsers?.map((p) => {
     return (
       <List.Item key={p.id}>
         <List.Content floated="right">
           <Checkbox
-            checked={p.checked}
+            checked={map[p.id] || false}
             onChange={(_e, data) =>
               setSelected((prevState) => changeSelected(prevState, data.checked!, p))
             }
@@ -128,7 +124,11 @@ SidePanel.UsersSelect = ({ currUser, all, selected, setSelected, loading }: User
 
   return (
     <StyledUserSelect>
-      <Input fluid placeholder="Type the username of a friend" />
+      <Input
+        fluid
+        placeholder="Type the username of a friend"
+        onChange={(e) => filter(e.target.value)}
+      />
       <Segment loading={loading}>
         <StyledList>
           <List divided verticalAlign="middle">

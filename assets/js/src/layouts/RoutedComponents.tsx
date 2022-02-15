@@ -1,13 +1,12 @@
 import React from 'react';
 import { Outlet, Route, Routes } from 'react-router-dom';
-import Chat from '../components/Chat';
+import { Chat } from '../components/Chat';
+import NoRoomSelected from './NoRoomSelected';
 
 function RoutedComponents() {
-  const noSelection = <div>No Room</div>;
-
   return (
     <Routes>
-      <Route path="/" element={noSelection} />
+      <Route path="/" element={<NoRoomSelected />} />
       <Route path="chatrooms" element={<Outlet />}>
         <Route path=":roomId" element={<Chat />} />
       </Route>

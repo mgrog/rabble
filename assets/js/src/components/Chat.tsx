@@ -1,19 +1,30 @@
 import React, {
-  KeyboardEvent,
   Dispatch,
+  Fragment,
+  KeyboardEvent,
   ReactNode,
   SetStateAction,
   useCallback,
+  useContext,
   useState,
 } from 'react';
 import { useParams } from 'react-router-dom';
-import { useChannel } from '../hooks/useChannel';
-import { styled } from '../../stitches.config';
-import Feed from './Feed';
-import { Message, Participant, Room, User } from '../shared/interfaces/structs.interfaces';
-import { Header } from 'semantic-ui-react';
 import TextareaAutosize from 'react-textarea-autosize';
-import { PhxBroadcast, PhxReply } from '../shared/interfaces/phx-response.types';
+import { Header } from 'semantic-ui-react';
+import { styled } from '../../stitches.config';
+import { AppContext } from '../contexts/AppContext';
+import { useChannel } from '../hooks/useChannel';
+import useTypingStatus from '../hooks/useTypingStatus';
+import {
+  PhxBroadcast,
+  PhxPresence,
+  PhxReply,
+  TypingUpdate,
+} from '../shared/interfaces/phx-response.types';
+import { Message, Participant, Room, User } from '../shared/interfaces/structs.interfaces';
+import Feed from './Feed';
+
+type TypingStatus = { [k: string | number]: TypingUpdate };
 
 const Chat = () => {
   const params = useParams();
@@ -21,16 +32,19 @@ const Chat = () => {
   const [title, setTitle] = useState('');
   const [messages, setMessages] = useState<Partial<Message>[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [typingStatus, setTypingStatus] = useState<any>({});
+  const { store } = useContext(AppContext);
 
   type ChatResponse =
     | PhxReply<{ room: Room }>
     | PhxBroadcast<'message_added', Message>
     | PhxBroadcast<'user_left', User>
-    | PhxBroadcast<'users_edited', Participant[]>;
+    | PhxBroadcast<'users_edited', Participant[]>
+    | PhxPresence<'presence_diff', { [k: string]: TypingUpdate }>;
 
   const chatConnect = useCallback(
     (dispatch: ChatResponse) => {
-      console.log(dispatch);
+      // console.log(dispatch);
       switch (dispatch.type) {
         case 'phx_reply':
           let { room } = dispatch.payload.response;
@@ -49,6 +63,9 @@ const Chat = () => {
           let newParticipants = dispatch.payload.data;
           setParticipants(newParticipants);
           return;
+        case 'presence_diff':
+          setTypingStatus((prevState: TypingStatus) => ({ ...prevState, ...dispatch.payload }));
+          return;
       }
     },
     [setMessages],
@@ -60,14 +77,29 @@ const Chat = () => {
     channel.broadcast('message', { content });
   };
 
-  const renderedMembers = participants.slice(0, 8).map((x) => (
-    <b key={x.id} title={`${x.nickname}'s user profile`}>
-      @{x.nickname}
-    </b>
-  ));
+  const broadcastTyping = (typing: boolean) => {
+    channel.broadcast('status_update', { typing });
+  };
+
+  const renderedMembers = participants.slice(0, 8).map((x) => {
+    const [presence] = store.presences[x.user_id]?.metas || [null];
+
+    return (
+      <Fragment key={x.id}>
+        <b title={`${x.nickname}'s user profile`}>@{x.nickname}</b>
+        <span>
+          {presence ? (
+            <StyledStatusIndicator status={presence.status} />
+          ) : (
+            <StyledStatusIndicator />
+          )}
+        </span>
+      </Fragment>
+    );
+  });
 
   return (
-    <>
+    <Chat.Box>
       <Chat.Title>
         <Header as={'h2'}>
           {title || 'loading...'}
@@ -79,11 +111,14 @@ const Chat = () => {
           </Header.Subheader>
         </Header>
       </Chat.Title>
-      <Chat.Box>
-        <Feed feedMessages={messages}></Feed>
-      </Chat.Box>
-      <Chat.Input value={currentMessage} setValue={setCurrentMessage} addMessage={addMessage} />
-    </>
+      <Feed feedMessages={messages} typingStatus={typingStatus}></Feed>
+      <Chat.Input
+        value={currentMessage}
+        setValue={setCurrentMessage}
+        addMessage={addMessage}
+        broadcastTyping={broadcastTyping}
+      />
+    </Chat.Box>
   );
 };
 
@@ -97,12 +132,17 @@ type InputProps = {
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
   addMessage: (text: string) => void;
+  broadcastTyping: (typing: boolean) => void;
 };
 
-Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
+Chat.Input = ({ value, setValue, addMessage, broadcastTyping }: InputProps) => {
+  const [stop, setStop] = useState(false);
+
   const updateTextBox = (text: string) => {
     setValue(text);
   };
+
+  useTypingStatus(value, 3000, broadcastTyping, { stop, setStop });
 
   const enterMessage = (text: string) => {
     setValue('');
@@ -113,6 +153,7 @@ Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
     switch (event.key) {
       case 'Enter':
         event.preventDefault();
+        setStop(true);
         return enterMessage(value);
     }
   };
@@ -135,9 +176,8 @@ Chat.Input = ({ value, setValue, addMessage }: InputProps) => {
 const StyledBox = styled('div', {
   position: 'relative',
   backgroundColor: 'white',
-  minHeight: '100%',
-  height: 'auto',
-  padding: '0 2rem',
+  height: '100vh',
+  overflow: 'hidden auto',
 });
 
 const StyledTitle = styled('div', {
@@ -153,6 +193,8 @@ const StyledTitle = styled('div', {
 const StyledInput = styled('div', {
   position: 'sticky',
   bottom: '1.2rem',
+  display: 'flex',
+  justifyContent: 'center',
 
   '& textarea': {
     margin: '0 4rem',
@@ -167,10 +209,6 @@ const StyledInput = styled('div', {
     resize: 'none',
     fontFamily: 'inherit',
     overflow: 'hidden',
-
-    '&:focus': {
-      outline: 'solid $blue-800',
-    },
   },
 });
 
@@ -185,4 +223,21 @@ const StyledUserLink = styled('div', {
   },
 });
 
-export default Chat;
+const StyledStatusIndicator = styled('div', {
+  backgroundColor: '$gray-200',
+  borderRadius: '50%',
+  width: '0.5rem',
+  height: '0.5rem',
+  variants: {
+    status: {
+      online: {
+        backgroundColor: '$green-400',
+      },
+      away: {
+        backgroundColor: '$amber-400',
+      },
+    },
+  },
+});
+
+export { Chat, TypingStatus };

@@ -1,5 +1,6 @@
 import useAxios from 'axios-hooks';
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Menu } from 'semantic-ui-react';
 import { styled } from '../../stitches.config';
 
@@ -24,7 +25,9 @@ function Nav() {
   return (
     <StyledNav>
       <Menu fixed="top">
-        <Menu.Header as={Nav.Header}></Menu.Header>
+        <Menu.Header as={Link} to="/">
+          <StyledHeader>Rabble</StyledHeader>
+        </Menu.Header>
         <Menu.Menu position="right">
           <Menu.Item onClick={() => signout()}>Sign Out</Menu.Item>
         </Menu.Menu>
@@ -32,10 +35,6 @@ function Nav() {
     </StyledNav>
   );
 }
-
-Nav.Header = () => {
-  return <StyledHeader>Rabble</StyledHeader>;
-};
 
 // styles
 
@@ -50,6 +49,7 @@ const StyledNav = styled('div', {
 
 const StyledHeader = styled('h1', {
   fontFamily: 'Righteous, cursive',
+  color: '$gray-900',
   fontSize: '2.8em',
 });
 
