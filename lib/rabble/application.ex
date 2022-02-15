@@ -19,7 +19,7 @@ defmodule Rabble.Application do
       # Online Presence
       RabbleWeb.Presence,
       # Clean pow store
-      {Pow.Postgres.Store.AutoDeleteExpired, [interval: :timer.hours(1)]}
+      {Pow.Postgres.Store.AutoDeleteExpired, [interval: :timer.hours(24)]}
       # Start a worker by calling: Rabble.Worker.start_link(arg)
       # {Rabble.Worker, arg}
     ]
