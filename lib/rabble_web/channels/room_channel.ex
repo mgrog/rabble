@@ -79,6 +79,7 @@ defmodule RabbleWeb.RoomChannel do
           {key, val.metas |> List.first() |> Map.take([:nickname, :typing])}
         end
 
+      # IO.inspect(values)
       push(socket, topic, values)
     end
 

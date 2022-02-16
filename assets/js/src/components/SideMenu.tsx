@@ -241,6 +241,16 @@ const StyledItem = styled('div', {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+
+  '& .description': {
+    overflow: 'hidden !important',
+    textOverflow: 'ellipsis !important',
+    maxWidth: 180,
+  },
+
+  '& .item': {
+    paddingRight: '0 !important',
+  },
 });
 
 const StyledLinksContainer = styled('div', {
