@@ -161,7 +161,6 @@ defmodule Rabble.Chats do
   def create_room(attrs \\ %{}) do
     %Room{}
     |> Room.changeset(attrs)
-    |> Changeset.put_assoc(:users, attrs["users"])
     |> Repo.insert()
   end
 
@@ -203,8 +202,6 @@ defmodule Rabble.Chats do
 
   """
   def update_room(%Room{} = room, attrs \\ %{}) do
-    IO.puts("rooooom")
-
     room
     |> change_room(attrs)
     |> Repo.update()
@@ -264,14 +261,13 @@ defmodule Rabble.Chats do
     |> Ecto.Changeset.put_assoc(:users, new_users)
   end
 
-  def leave_room(%{"id" => room_id, "participants" => participants} = _attrs, %User{} = user) do
+  def leave_room(%{"id" => room_id, "participants" => participants}, %User{} = user) do
     # if user is last participant
-    head = List.first(participants)
+    [head | _tail] = participants
 
     if length(participants) == 1 && head["user_id"] == user.id do
       # delete the room
-      room_id
-      |> get_room!()
+      %Room{id: room_id}
       |> delete_room()
     else
       # delete just the roomuser association
@@ -281,7 +277,7 @@ defmodule Rabble.Chats do
       |> Repo.delete_all()
       |> case do
         {x, _} when x > 0 ->
-          {:ok, %{user: user, room: get_room!(room_id)}}
+          {:ok, "Left room"}
 
         _ ->
           {:error, "Something happened when leaving the room!"}
@@ -333,9 +329,8 @@ defmodule Rabble.Chats do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_participant(user, attrs \\ %{}) do
-    struct(User, user)
-    |> Ecto.build_assoc(:participants)
+  def create_participant(attrs \\ %{}) do
+    %Participant{}
     |> Participant.changeset(attrs)
     |> Repo.insert()
   end

@@ -7,7 +7,15 @@ defmodule Rabble.AccountsTest do
     alias Rabble.Accounts.User
 
     import Rabble.AccountsFixtures
+    import Rabble.AssertHelpers
 
+    @valid_attrs %{
+      nickname: "some name",
+      email: "fake@email.com",
+      password: "abcdefg1234",
+      password_confirmation: "abcdefg1234",
+      participants: []
+    }
     @invalid_attrs %{name: nil}
 
     test "list_users/0 returns all users" do
@@ -17,14 +25,13 @@ defmodule Rabble.AccountsTest do
 
     test "get_user!/1 returns the user with given id" do
       user = user_fixture()
-      assert Accounts.get_user!(user.id) == user
+
+      assert ignore_unloaded(Accounts.get_user!(user.id), user)
     end
 
     test "create_user/1 with valid data creates a user" do
-      valid_attrs = %{name: "some name"}
-
-      assert {:ok, %User{} = user} = Accounts.create_user(valid_attrs)
-      assert user.name == "some name"
+      assert {:ok, %User{} = user} = Accounts.create_user(@valid_attrs)
+      assert user.nickname == "some name"
     end
 
     test "create_user/1 with invalid data returns error changeset" do
@@ -33,16 +40,16 @@ defmodule Rabble.AccountsTest do
 
     test "update_user/2 with valid data updates the user" do
       user = user_fixture()
-      update_attrs = %{name: "some updated name"}
+      update_attrs = %{nickname: "some updated name", current_password: "abcdefg1234"}
 
       assert {:ok, %User{} = user} = Accounts.update_user(user, update_attrs)
-      assert user.name == "some updated name"
+      assert user.nickname == "some updated name"
     end
 
     test "update_user/2 with invalid data returns error changeset" do
       user = user_fixture()
       assert {:error, %Ecto.Changeset{}} = Accounts.update_user(user, @invalid_attrs)
-      assert user == Accounts.get_user!(user.id)
+      assert ignore_unloaded(Accounts.get_user!(user.id), user)
     end
 
     test "delete_user/1 deletes the user" do

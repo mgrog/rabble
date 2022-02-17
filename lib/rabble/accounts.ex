@@ -86,30 +86,9 @@ defmodule Rabble.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
-    IO.puts("+++++++")
-
-    changeset =
-      %User{}
-      |> User.changeset(attrs)
-
-    {status, resp} = Repo.insert(changeset)
-
-    {nextStatus, nextResp} =
-      case {status, resp} do
-        {:ok, user} ->
-          Chats.create_participant(user)
-
-        {:error, resp} ->
-          {:error, resp}
-      end
-
-    case {nextStatus, resp, nextResp} do
-      {:ok, resp, _} ->
-        {:ok, resp}
-
-      {:error, _, nextResp} ->
-        {:error, nextResp}
-    end
+    %User{}
+    |> User.changeset(attrs)
+    |> Repo.insert()
   end
 
   @doc """
