@@ -5,7 +5,6 @@ defmodule Rabble.Chats do
 
   import Ecto.Query, warn: false
   alias Rabble.Repo
-  alias Ecto.Changeset
 
   alias Rabble.Chats.Message
 
@@ -178,7 +177,7 @@ defmodule Rabble.Chats do
 
     %Room{}
     |> Room.changeset(attrs)
-    |> Changeset.put_assoc(:users, users)
+    |> Ecto.Changeset.put_assoc(:users, users)
     |> Repo.insert()
     |> case do
       {:ok, room} ->

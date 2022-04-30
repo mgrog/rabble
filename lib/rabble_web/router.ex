@@ -13,7 +13,6 @@ defmodule RabbleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug RabbleWeb.APIAuthPlug, otp_app: :my_app
   end
 
   pipeline :protected do

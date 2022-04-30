@@ -3,6 +3,8 @@ defmodule RabbleWeb.RoomChannel do
   alias Rabble.Chats
   alias RabbleWeb.Presence
 
+  require Logger
+
   @impl true
   def join("room:" <> room_id, payload, socket) do
     if authorized?(payload) do
@@ -20,6 +22,7 @@ defmodule RabbleWeb.RoomChannel do
   @impl true
   def handle_info(:after_join, socket) do
     p = socket.assigns.participant
+    Logger.debug("#{p.nickname} joined room")
 
     {:ok, _} =
       Presence.track(socket, p.id, %{
@@ -55,6 +58,7 @@ defmodule RabbleWeb.RoomChannel do
 
     case Presence.update(socket, p.id, %{id: p.id, nickname: p.nickname, typing: typing}) do
       {:ok, _} ->
+        Logger.debug("typing status updated")
         {:noreply, socket}
 
       {:error, changeset} ->
@@ -72,14 +76,15 @@ defmodule RabbleWeb.RoomChannel do
       ) do
     id = to_string(curr.id)
     for_curr_user = Map.has_key?(joins, id) || Map.has_key?(leaves, id)
+    # IO.inspect(joins)
 
     if !for_curr_user do
       values =
         for {key, val} <- Map.to_list(joins), into: %{} do
-          {key, val.metas |> List.first() |> Map.take([:nickname, :typing])}
+          {key, val.metas |> List.first()}
         end
 
-      # IO.inspect(values)
+      IO.inspect(values)
       push(socket, topic, values)
     end
 

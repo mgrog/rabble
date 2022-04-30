@@ -6,14 +6,15 @@ import React, {
   SetStateAction,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from 'react';
-import { useParams } from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
-import { Header } from 'semantic-ui-react';
-import { styled } from '../../stitches.config';
-import { AppContext } from '../contexts/AppContext';
-import { useChannel } from '../hooks/useChannel';
+import {Header} from 'semantic-ui-react';
+import {styled} from '../../stitches.config';
+import {AppContext} from '../contexts/AppContext';
+import {useChannel} from '../hooks/useChannel';
 import useTypingStatus from '../hooks/useTypingStatus';
 import {
   PhxBroadcast,
@@ -21,10 +22,10 @@ import {
   PhxReply,
   TypingUpdate,
 } from '../shared/interfaces/phx-response.types';
-import { Message, Participant, Room, User } from '../shared/interfaces/structs.interfaces';
+import {Message, Participant, Room, User} from '../shared/interfaces/structs.interfaces';
 import Feed from './Feed';
 
-type TypingStatus = { [k: string | number]: TypingUpdate };
+type TypingStatus = {[k: string | number]: TypingUpdate};
 
 const Chat = () => {
   const params = useParams();
@@ -33,52 +34,56 @@ const Chat = () => {
   const [messages, setMessages] = useState<Partial<Message>[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [typingStatus, setTypingStatus] = useState<any>({});
-  const { store } = useContext(AppContext);
+  const {store} = useContext(AppContext);
+
+  useEffect(() => {
+    setTypingStatus({});
+  }, [params]);
 
   type ChatResponse =
-    | PhxReply<{ room: Room }>
+    | PhxReply<{room: Room}>
     | PhxBroadcast<'message_added', Message>
     | PhxBroadcast<'user_left', User>
     | PhxBroadcast<'users_edited', Participant[]>
-    | PhxPresence<'presence_diff', { [k: string]: TypingUpdate }>;
+    | PhxPresence<'presence_diff', {[k: string]: TypingUpdate}>;
 
   const chatConnect = useCallback(
     (dispatch: ChatResponse) => {
       // console.log(dispatch);
       switch (dispatch.type) {
         case 'phx_reply':
-          let { room } = dispatch.payload.response;
+          let {room} = dispatch.payload.response;
           setTitle(room.title);
           setMessages(room.messages);
           setParticipants(room.participants);
           return;
         case 'message_added':
-          setMessages((prevState) => [...prevState, { ...dispatch.payload.data }]);
+          setMessages((prevState) => [...prevState, {...dispatch.payload.data}]);
           return;
         case 'user_left':
           let u = dispatch.payload.data;
-          setMessages((prevState) => [...prevState, { content: `${u.nickname} left` }]);
+          setMessages((prevState) => [...prevState, {content: `${u.nickname} left`}]);
           return;
         case 'users_edited':
           let newParticipants = dispatch.payload.data;
           setParticipants(newParticipants);
           return;
         case 'presence_diff':
-          setTypingStatus((prevState: TypingStatus) => ({ ...prevState, ...dispatch.payload }));
+          setTypingStatus((prevState: TypingStatus) => ({...prevState, ...dispatch.payload}));
           return;
       }
     },
     [setMessages],
   );
 
-  const channel = useChannel(`room:${params.roomId}`, { onMessage: chatConnect });
+  const channel = useChannel(`room:${params.roomId}`, {onMessage: chatConnect});
 
   const addMessage = (content: string) => {
-    channel.broadcast('message', { content });
+    channel.broadcast('message', {content});
   };
 
   const broadcastTyping = (typing: boolean) => {
-    channel.broadcast('status_update', { typing });
+    channel.broadcast('status_update', {typing});
   };
 
   const renderedMembers = participants.slice(0, 8).map((x) => {
@@ -122,11 +127,11 @@ const Chat = () => {
   );
 };
 
-Chat.Box = ({ children }: { children: ReactNode }) => {
+Chat.Box = ({children}: {children: ReactNode}) => {
   return <StyledBox>{children}</StyledBox>;
 };
 
-Chat.Title = ({ children }: { children: ReactNode }) => <StyledTitle>{children}</StyledTitle>;
+Chat.Title = ({children}: {children: ReactNode}) => <StyledTitle>{children}</StyledTitle>;
 
 type InputProps = {
   value: string;
@@ -135,14 +140,14 @@ type InputProps = {
   broadcastTyping: (typing: boolean) => void;
 };
 
-Chat.Input = ({ value, setValue, addMessage, broadcastTyping }: InputProps) => {
+Chat.Input = ({value, setValue, addMessage, broadcastTyping}: InputProps) => {
   const [stop, setStop] = useState(false);
 
   const updateTextBox = (text: string) => {
     setValue(text);
   };
 
-  useTypingStatus(value, 3000, broadcastTyping, { stop, setStop });
+  useTypingStatus(value, 3000, broadcastTyping, {stop, setStop});
 
   const enterMessage = (text: string) => {
     setValue('');
@@ -240,4 +245,4 @@ const StyledStatusIndicator = styled('div', {
   },
 });
 
-export { Chat, TypingStatus };
+export {Chat, TypingStatus};
