@@ -1,5 +1,7 @@
 # Rabble
 
+Run `yarn install`
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
