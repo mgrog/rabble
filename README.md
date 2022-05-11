@@ -3,7 +3,8 @@
 Install frontend with `cd assets/js && yarn install`
 
 To start your Phoenix server:
-  *Back in root
+
+  *Back in root*
 
   * Install dependencies with `mix deps.get`
   * Create and migrate your database with `mix ecto.setup`
